@@ -346,4 +346,44 @@ public:
 };
 ```
 
+<img src="https://user-images.githubusercontent.com/28688510/155365911-7025d885-3c2a-4b68-9048-00411a32a83a.png" width="600">
 
+通过分别滑动A和B字符串，逐个比对元素是否相同，取相同部分长度返回，最终求最大值
+
+```c++
+class Solution {
+public:
+    int maxLength(vector<int>& A, vector<int>& B, int addA, int addB, int len) {
+        int k = 0;
+        int ans = 0;
+        // 注意这里的len，不能越界
+        for (int i = 0; i < len; i++) {
+            if (A[addA + i] == B[addB + i]) {
+                k++;
+            }
+            else {
+                k = 0;
+            }
+            ans = max(ans, k);
+        }
+        return ans;
+    }
+    int findLength(vector<int>& A, vector<int>& B) {
+        int sizeA = A.size(), sizeB = B.size();
+        int ans = 0;
+        // 滑动A后取最大的子串长度
+        for (int i = 0; i < sizeA; i++) {
+            int len = min(sizeB, sizeA - i);
+            int tmp = maxLength(A, B, i, 0, len);
+            ans = max(ans, tmp);
+        }
+        // 滑动B后取最大的子串长度
+        for (int i = 0; i < sizeB; i++) {
+            int len = min(sizeA, sizeB - i);
+            int tmp = maxLength(A, B, 0, i, len);
+            ans = max(ans, tmp);
+        }
+        return ans;
+    }
+};
+```
