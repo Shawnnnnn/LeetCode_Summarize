@@ -36,7 +36,7 @@ public:
     }
 };
 ```
-
+------
 <img src="https://user-images.githubusercontent.com/28688510/155183675-bea1430c-f636-4378-8701-249f558f6a05.png" width="600">
 
 同样，这一题可以看做是多个柱状图中找最大面积，做法与上一题基本一致，区别在于要逐步从第一行到最后一行将矩阵看做柱状图，再重复调用上一题的解题方法即可
@@ -81,7 +81,7 @@ public:
     }
 };
 ```
-
+------
 <img src="https://user-images.githubusercontent.com/28688510/155186443-7e951105-7714-4bac-b8b7-1ab266e3f879.png" width="600">
 对于下标 i，下雨后水能到达的最大高度等于下标 i 两边的最大高度的最小值，下标 i 处能接的雨水量等于下标 i 处的水能到达的最大高度减去 height[i]。
 　
@@ -120,6 +120,7 @@ public:
 ```
   
 此题还可以采用**双指针**来做，维护两个指针 left 和 right，以及两个变量 leftMax 和 rightMax，初始时 left=0,right=n-1,leftMax=0,rightMax=0。指针 left 只会向右移动，指针 right 只会向左移动，在移动指针的过程中维护两个变量 leftMax 和 rightMax 的值。
+
 <img src="https://user-images.githubusercontent.com/28688510/155192585-5f6fc5b2-4f81-40f5-9db0-872b9fa0b847.png" width="600">
 
 ```c++
@@ -156,7 +157,7 @@ public:
 * 大小为 K 的子数组的最大和（简单）
 * 带有 K 个不同字符的最长子字符串（中等）  ----*采用滑动窗口，用HashMap记录窗口中间的字符串是否满足要求*
 * 寻找字符相同但排序不一样的字符串（困难）
-
+------
 <img src="https://user-images.githubusercontent.com/28688510/155357541-3de82267-d6f7-4ffb-a69d-24ca39166cf4.png" width="600">
 
 这题与带有 K 个不同字符的最长子字符串类似，采用滑动窗口与hashset记录双指针中间的字符串是否有相同的字符，在每一步的操作中，我们会将左指针向右移动一格，表示**我们开始枚举下一个字符作为起始位置**，然后我们可以不断地向右移动右指针，但需要保证这两个指针对应的子串中没有重复的字符。在移动结束后，这个子串就对应着 **以左指针开始的，不包含重复字符的最长子串**。我们记录下这个子串的长度，最后找到最大值即可。
@@ -189,7 +190,7 @@ public:
     }
 };
 ```
-
+------
 <img src="https://user-images.githubusercontent.com/28688510/155359599-5ca15f08-823b-4afb-9d53-39bbc540cbb1.png" width="600">
 <img src="https://user-images.githubusercontent.com/28688510/155360290-8e5a5be7-2b14-40e9-8686-76ab381b7c14.gif" width="600">
 
@@ -243,7 +244,7 @@ public:
     }
 };
 ```
-
+------
 <img src="https://user-images.githubusercontent.com/28688510/155360915-793c2d2d-e8a2-4de6-b6d9-d293f341d538.png" width="600">
 
 ```c++
@@ -268,7 +269,7 @@ public:
     }
 };
 ```
-
+------
 <img src="https://user-images.githubusercontent.com/28688510/155362858-592060e5-fc95-4ec4-ba06-7ac67a2b1430.png" width="600">
 
 这题虽然题目带滑动窗口，但实际与滑动窗口关系不大，这里通过维护一个堆（元素为值和索引）或者双端队列（递减，队首始终为最大值）来解题，当新元素入队列时与队尾比较，如果大于队尾，则队尾元素永远不可能被取为最大值，队尾一直出队直到满足大于入队元素，元素入队后，判断队首元素是否在队列中，如果不在，队首也要出队。这个过程结束后，队首元素即为当前滑动窗口的最大值。
@@ -310,7 +311,7 @@ public:
     }
 };
 ```
-
+------
 <img src="https://user-images.githubusercontent.com/28688510/155363919-504267ee-fc57-445d-981c-f38422ee3378.png" width="600">
 
 此题即对应上面所说的第三种题型，思路一样，维护一个hash表用于保存p的字母个数，滑动窗口解题
@@ -345,7 +346,7 @@ public:
     }
 };
 ```
-
+------
 <img src="https://user-images.githubusercontent.com/28688510/155365911-7025d885-3c2a-4b68-9048-00411a32a83a.png" width="600">
 
 通过分别滑动A和B字符串，逐个比对元素是否相同，取相同部分长度返回，最终求最大值
@@ -384,6 +385,191 @@ public:
             ans = max(ans, tmp);
         }
         return ans;
+    }
+};
+```
+
+## 双指针
+双指针（Two Pointers）是这样一种模式：两个指针以一前一后的模式在数据结构中迭代，直到一个或两个指针达到某种特定条件。双指针通常在排序数组或链表中搜索配对时很有用；比如当你必须将一个数组的每个元素与其它元素做比较时。
+
+双指针是很有用的，因为如果只有一个指针，你必须继续在数组中循环回来才能找到答案。这种使用单个迭代器进行来回在时间和空间复杂度上都很低效——这个概念被称为「渐进分析（asymptotic analysis）」。尽管使用 1 个指针进行暴力搜索或简单普通的解决方案也有效果，但这会让时间复杂度达到 O(n²) 。在很多情况下，双指针有助于你寻找有更好空间或运行时间复杂度的解决方案。
+
+<img src="https://user-images.githubusercontent.com/28688510/155569214-f13083d9-63a2-4d87-8555-1b4cc2ed3024.png" width="600">
+
+用于识别使用双指针的时机的方法：
+* 可用于你要处理排序数组（或链接列表）并需要查找满足某些约束的一组元素的问题
+* 数组中的元素集是配对、三元组甚至子数组
+
+下面是一些满足双指针模式的问题：
+* 求一个排序数组的平方（简单）
+* 求总和为零的三元组（中等）
+* 比较包含回退（backspace）的字符串（中等）
+------
+<img src="https://user-images.githubusercontent.com/28688510/155570731-08a6c857-71b3-4d56-b3d8-b5d01940f584.png" width="600">
+
+显然，如果数组 nums 中的所有数都是非负数，那么将每个数平方后，数组仍然保持升序；如果数组 nums 中的所有数都是负数，那么将每个数平方后，数组会保持降序。通过找到分界点，给分界点和分界点左边一个作为两个数组的起始点（双指针），后采用归并排序的方法进行结果插入，可以省略排序的时间复杂度，使得时间复杂度达到O(n)。
+
+```c++
+class Solution {
+public:
+    vector<int> sortedSquares(vector<int>& nums) {
+        int n = nums.size();
+        int right= 0;
+        while (right < n && nums[right] < 0) {
+            right++;
+        }
+        int left = right - 1;
+
+        vector<int> res;
+        while (left >= 0 || right < n) {
+            int tmp = 0;
+            if (left < 0) {
+                tmp = nums[right] * nums[right];
+                right++;
+            }
+            else if (right >= n) {
+                tmp = nums[left] * nums[left];
+                left--;
+            }
+            else {
+                if (nums[left] * -1 <= nums[right]) {
+                    tmp = nums[left] * nums[left];
+                    left--;
+                }
+                else {
+                    tmp = nums[right] * nums[right];
+                    right++;
+                }
+            }
+            res.push_back(tmp);
+        }
+
+        return res;
+    }
+};
+```
+------
+<img src="https://user-images.githubusercontent.com/28688510/155574831-cecc046f-0c2c-4253-811a-a3c114365ac8.png" width="600">
+
+这题很简单，因为是有序数组，双指针分别从首尾遍历即可，小于目标值说明左边应该变大，左指针右移，大于目标值说明右边应该变小，右指针左移
+
+```c++
+class Solution {
+public:
+    vector<int> twoSum(vector<int>& numbers, int target) {
+        int i = 0, j = numbers.size() - 1;
+        while (i < j) {
+            if (numbers[i] + numbers[j] == target) {
+                return {i + 1, j + 1};
+            }
+            else if (numbers[i] + numbers[j] < target) {
+                i++;
+            }
+            else {
+                j--;
+            }
+        }
+        return {};
+    }
+};
+```
+--------
+
+那么如果是三数之和呢？同样，只需要固定住一个数，然后其余两个数按上面的方法确定即可。
+
+<img src="https://user-images.githubusercontent.com/28688510/155573950-00a190c7-aa1b-4c15-af06-498a1ed7949e.png" width="600">
+
+```c++
+class Solution {
+public:
+    vector<vector<int>> threeSum(vector<int>& nums) {
+        int len = nums.size();
+        vector<vector<int>> res;
+        if (len < 3) return res;
+        sort(nums.begin(), nums.end());
+        for (int i = 0; i < len - 2; i++) {
+            int left = i + 1, right = len - 1, sum = 0 - nums[i];
+            // 为了保证不加入重复的 list,因为是有序的，所以如果和前一个元素相同，只需要继续后移就可以
+            if (i == 0 || i > 0 && (nums[i] != nums[i - 1])) {
+                while (left < right) {
+                    if (nums[left] + nums[right] == sum) {
+                        res.push_back({nums[i], nums[left], nums[right]});
+                        // 元素相同要后移，防止加入重复的list
+                        while (left < right && nums[left] == nums[left + 1]) left++;
+                        while (left < right && nums[right] == nums[right - 1]) right--;
+                        left++; right--;
+                    }
+                    else if (nums[left] + nums[right] < sum) left++;
+                    else right--;
+                }
+            }
+        }
+        return res;
+    }
+};
+```
+-------
+如果是四数之和呢？与三个数解法类似，不同的是要用双重循环确定前两个数，同时要做一些剪枝操作：
+* 在确定第一个数之后，如果 nums[i]+nums[i+1]+nums[i+2]+nums[i+3]>target，说明此时剩下的三个数无论取什么值，四数之和一定大于 target，因此退出第一重循环；
+* 在确定第一个数之后，如果 nums[i]+nums[n−3]+nums[n−2]+nums[n−1]<target，说明此时剩下的三个数无论取什么值，四数之和一定小于 target，因此第一重循环直接进入下一轮，枚举 nums[i+1]；
+* 在确定前两个数之后，如果 nums[i]+nums[j]+nums[j+1]+nums[j+2]>target，说明此时剩下的两个数无论取什么值，四数之和一定大于 target，因此退出第二重循环；
+* 在确定前两个数之后，如果 nums[i]+nums[j]+nums[n−2]+nums[n−1]<target，说明此时剩下的两个数无论取什么值，四数之和一定小于 target，因此第二重循环直接进入下一轮，枚举 nums[j+1]。
+
+<img src="https://user-images.githubusercontent.com/28688510/155582002-ba6dfff4-68df-428d-b8ce-d966a8f2df9a.png" width="600">
+
+```c++
+class Solution {
+public:
+    vector<vector<int>> fourSum(vector<int>& nums, int target) {
+        sort(nums.begin(), nums.end());
+
+        int n = nums.size();
+        vector<vector<int>> res;
+
+        for (int i = 0; i <= n - 4; i++) {
+            // 避免重复结果
+            if (i > 0 && nums[i] == nums[i - 1]) continue;
+            // 剪枝
+            if ((long)nums[i] + nums[i+1] + nums[i+2] + nums[i+3] > target) break;
+            if ((long)nums[i] + nums[n-1] + nums[n-2] + nums[n-3] < target) continue;
+            
+            for (int j = i + 1; j <= n - 3; j++) {
+                // 避免重复结果
+                if (j > i + 1 && nums[j] == nums[j - 1]) continue;
+                // 剪枝
+                if ((long)nums[i] + nums[j] + nums[j+1] + nums[j+2] > target) break;
+                if ((long)nums[i] + nums[j] + nums[n-1] + nums[n-2] < target) continue;
+
+                int sum = target - nums[i] - nums[j];
+                int left = j + 1, right = n - 1;
+
+                while (left < right) {
+                    if (nums[left] + nums[right] == sum) {
+                        res.push_back({nums[i], nums[j], nums[left], nums[right]});
+                        // 避免出现重复结果，跳过相同的部分
+                        // 由于循环是找到最后一个相同数字的位置，因此跳出循环后还要右移一次
+                        while (left < right && nums[left] == nums[left+1]) {
+                            left++;
+                        }
+                        left++;
+                        // 避免出现重复结果，跳过相同的部分
+                        // 由于循环是找到最后一个相同数字的位置，因此跳出循环后还要左移一次
+                        while (left < right && nums[right] == nums[right-1]) {
+                            right--;
+                        }
+                        right--;
+                    }
+                    else if (nums[left] + nums[right] > sum) {
+                        right--;
+                    }
+                    else {
+                        left++;
+                    }
+                }
+            }
+        }
+
+        return res;
     }
 };
 ```
