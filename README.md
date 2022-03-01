@@ -698,6 +698,150 @@ public:
 };
 ```
 
+------
 
+<img src="https://user-images.githubusercontent.com/28688510/156201706-fc251cab-1f68-4185-ac22-893b3f439743.png" width="500">
 
+这一题非常经典，如果不用双指针的话，需要两次遍历，第一次求整个链表的长度，第二次再到指定位置去删除节点。
+如果是使用双指针的话，让快指针先走n步，然后快慢指针再同时走，当快指针走到末尾结点时，慢指针即找到待删除节点。**这里要考虑只有一个结点的情况，我们将一个新的空结点指向头结点，就可以避免这种情况而不去特殊处理，最终返回这个新结点的下一个结点作为结果，也就避免了头结点被删除的情况**
 
+```c++
+class Solution {
+public:
+    ListNode* removeNthFromEnd(ListNode* head, int n) {
+        // 设置结点指向头结点
+        ListNode* pre = new ListNode();
+        pre->next = head;
+
+        ListNode* slow = pre;
+        ListNode* fast = pre;
+
+        // 快指针先走
+        for (int i = 0; i < n; i++) {
+            fast = fast->next;
+        }
+
+        // 快慢指针同时走，直到快指针到最后
+        while (fast->next) {
+            slow = slow->next;
+            fast = fast->next;
+        }
+
+        // 此时慢指针即是待删除的结点的前一个结点
+        slow->next = slow->next->next;
+
+        return pre->next;
+    }
+};
+```
+
+------
+
+<img src="https://user-images.githubusercontent.com/28688510/156203495-ff5b6161-d6b5-493a-9425-72740f5914cb.png" width="500">
+
+这个题如果没做过还是相当有难度的，这里直接贴一下官方题解的思路
+
+<img src="https://user-images.githubusercontent.com/28688510/156203694-5df9b100-45c6-4463-9e72-ff99d5fad06e.png" width="600">
+
+![31](https://user-images.githubusercontent.com/28688510/156204668-211b7e7a-4673-4812-993f-af24cc1bc56f.gif)
+
+好像与双指针没太大关系哈。。。
+
+```c++
+class Solution {
+public:
+    void nextPermutation(vector<int>& nums) {
+        int i = nums.size() - 2;
+        // 从后往前找到第一个nums[i] < nums[i + 1]的元素
+        while (i >= 0 && nums[i] >= nums[i + 1]) {
+            i--;
+        }
+        
+        // 如果i<0则表明整个数组都降序排列
+        if (i >= 0) {
+            int j = nums.size() - 1;
+            // 在区间[i+1：]找到第一个大于nums[i]的元素
+            // 这里没有令j >= i+1，因为区间[i+1：]降序排列，所以一定能在这个区间内找到大于nums[i]的元素
+            while (j >= 0 && nums[i] >= nums[j]) {
+                j--;
+            }
+            // 交换这两个数
+            swap(nums[i], nums[j]);
+        }
+        // 反转降序的部分
+        reverse(nums.begin() + i + 1, nums.end());
+    }
+};
+```
+
+------
+
+<img src="https://user-images.githubusercontent.com/28688510/156209007-308f57e7-097c-4f66-a791-9c4b40841796.png" width="500">
+
+这个题目有两种思路：
+
+1. 二分法：
+
+<img src="https://user-images.githubusercontent.com/28688510/156209366-aab7736c-c975-4157-89f8-f154c95133e2.png" width="600">
+
+时间复杂度：O(nlogn)，其中 nn 为 nums 数组的长度。O(logn) 代表了我们枚举二进制数的位数个数，枚举第 i 位的时候需要遍历数组统计 x 和 y 的答案，因此总时间复杂度为 O(nlogn)。
+
+```c++
+class Solution {
+public:
+    int findDuplicate(vector<int>& nums) {
+        int n = nums.size();
+        int l = 1, r = n - 1, ans = -1;
+        while (l <= r) {
+            int mid = (l + r) >> 1;
+            
+            // 统计小于等于mid的个数
+            int cnt = 0;
+            for (int i = 0; i < n; ++i) {
+                cnt += nums[i] <= mid;
+            }
+            
+            if (cnt <= mid) {
+                l = mid + 1;
+            } else {
+                r = mid - 1;
+                ans = mid;
+            }
+        }
+        return ans;
+    }
+};
+```
+
+2. 双指针（快慢）：
+
+这里就依赖于对 「Floyd 判圈算法」（又称龟兔赛跑算法）有所了解，它是一个检测链表是否有环的算法，LeetCode 中相关例题有 141. 环形链表，142. 环形链表 II。
+
+我们对 nums 数组建图，每个位置 i 连一条 i→nums[i] 的边。由于存在的重复的数字 target，因此 target 这个位置一定有起码两条指向它的边，因此整张图一定存在环，且我们要找到的 target 就是这个环的入口，那么整个问题就等价于 142. 环形链表 II。
+
+**我们先设置慢指针 slow 和快指针 fast ，慢指针每次走一步，快指针每次走两步，根据「Floyd 判圈算法」两个指针在有环的情况下一定会相遇，此时我们再将 slow 放置起点 0，两个指针每次同时移动一步，相遇的点就是答案。**
+
+<img src="https://user-images.githubusercontent.com/28688510/156212218-043d02c1-c9e8-40af-8578-63f387d93e7b.png" width="600">
+
+```c++
+class Solution {
+public:
+    int findDuplicate(vector<int>& nums) {
+        int slow = 0, fast = 0;
+        // 从头开始，慢指针每次走一步，快指针每次走两步直到相遇
+        do {
+            slow = nums[slow];
+            fast = nums[nums[fast]];
+        } while (slow != fast);
+        
+        // 将慢指针设回开头位置
+        slow = 0;
+        // 此时再将两个指针每次同时移动一步，相遇的点就是环入口
+        while (slow != fast) {
+            slow = nums[slow];
+            fast = nums[fast];
+        }
+        return slow;
+    }
+};
+```
