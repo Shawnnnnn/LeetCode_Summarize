@@ -845,3 +845,126 @@ public:
     }
 };
 ```
+
+------
+
+<img src="https://user-images.githubusercontent.com/28688510/156330013-1a8c3c64-2d1b-40dd-b2e6-48707bb71cf5.png" width="500">
+
+这个题目通过**快慢指针实现二分**，然后将两部分进行归并排序，很巧妙
+
+```c++
+class Solution {
+public:
+    ListNode* mergeSort(ListNode* head1, ListNode* head2) {
+        ListNode* start = new ListNode();
+        ListNode* ans = start;
+
+        while (head1 && head2) {
+            if (head1->val < head2->val) {
+                start->next = head1;
+                start = start->next;
+                head1 = head1->next;
+            }
+            else {
+                start->next = head2;
+                start = start->next;
+                head2 = head2->next;
+            }
+        }
+        if (!head1) {
+            while (head2) {
+                start->next = head2;
+                start = start->next;
+                head2 = head2->next;
+            }
+        }
+        if (!head2) {
+            while (head1) {
+                start->next = head1;
+                start = start->next;
+                head1 = head1->next;
+            }
+        }
+        return ans->next;
+    }
+
+    ListNode* sortList(ListNode* head) {
+        if (head == nullptr || head->next == nullptr) return head;
+        ListNode* start = new ListNode();
+        start->next = head;
+        ListNode* slow = start;
+        ListNode* fast = start;
+
+        while (fast && fast->next) {
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+        ListNode* right_head = slow->next;
+        slow->next = nullptr;
+
+        ListNode* h1 = sortList(head);
+        ListNode* h2 = sortList(right_head);
+        return mergeSort(h1, h2);
+    }
+};
+```
+
+------
+
+<img src="https://user-images.githubusercontent.com/28688510/156335833-ee12edee-6642-491d-91b7-fd98d5f93deb.png" width="500">
+
+又是很巧妙的一种双指针解法，当一条路径遍历完后让其从另一条路径开始，这样会让第二次遍历时在交点处相遇。
+
+```c++
+class Solution {
+public:
+    ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+        ListNode* a = headA;
+        ListNode* b = headB;
+
+        while (a != b) {
+            a = a == nullptr? headB: a->next;
+            b = b == nullptr? headA: b->next;
+        }
+        return a;
+    }
+};
+```
+
+------
+
+<img src="https://user-images.githubusercontent.com/28688510/156338047-314b3b27-11d7-4681-a9cc-f8648dc7f77e.png" width="500">
+
+遍历到每个单词的起止位置，用双指针反转字符串即可。
+
+```c++
+class Solution {
+public: 
+    string reverseWords(string s) {
+        int length = s.length();
+        int i = 0;
+        while (i < length) {
+            int start = i;
+            // 遍历到单词结束的空格位置
+            while (i < length && s[i] != ' ') {
+                i++;
+            }
+
+            // 反转字符串
+            int left = start, right = i - 1;
+            while (left < right) {
+                swap(s[left], s[right]);
+                left++;
+                right--;
+            }
+            
+            // 将单词后面的空格走完
+            while (i < length && s[i] == ' ') {
+                i++;
+            }
+        }
+        return s;
+    }
+};
+```
+
