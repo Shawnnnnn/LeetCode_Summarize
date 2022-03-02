@@ -968,3 +968,59 @@ public:
 };
 ```
 
+------
+
+<img src="https://user-images.githubusercontent.com/28688510/156394514-d2e8d9af-ba9a-4cae-ba8c-7516a87aec38.png" width="500">
+
+很经典的一道题，如果想要空间复杂度为O(1)的话，则需要用的双指针算法（快慢指针），具体流程为：
+
+* 快慢指针找到中点
+* 以中点为界分成两个链表
+* 反转其中一个链表
+* 双指针依次判断这两个链表是否一一对应相等
+
+```c++
+class Solution {
+public:
+    bool isPalindrome(ListNode* head) {
+        // 快慢指针找中点
+        ListNode* slow = head;
+        ListNode* fast = head;
+        while (fast != nullptr && fast->next != nullptr) {
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+        
+        // 反转链表
+        ListNode* new_head = reverseList(slow);
+        
+        // 一一对应是否相等
+        while (head && new_head) {
+            if (head->val != new_head->val) {
+                return false;
+            }
+            head = head->next;
+            new_head = new_head->next;
+        }
+        return true;
+    }
+
+    ListNode* reverseList(ListNode* head) {
+        if (head == nullptr) return head;
+        ListNode* pre = nullptr;
+        while (head) {
+            ListNode* tmp = head->next;
+            head->next = pre;
+            pre = head;
+            head = tmp;
+        }
+        return pre;
+    }
+};
+```
+
+------
+
+<img src="https://user-images.githubusercontent.com/28688510/156400051-fcbd7eda-f096-4ee6-8f04-b6df09b111f9.png" width="500">
+
+这是快慢指针十分典型的题目，循环数组类型
