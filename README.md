@@ -1023,4 +1023,56 @@ public:
 
 <img src="https://user-images.githubusercontent.com/28688510/156400051-fcbd7eda-f096-4ee6-8f04-b6df09b111f9.png" width="500">
 
-这是快慢指针十分典型的题目，循环数组类型
+这是快慢指针十分典型的题目，循环数组类型，但由于题目条件较为复杂，要求循环路径只能同向，因此需要进行一些限制
+
+```c++
+class Solution {
+public:
+    bool circularArrayLoop(vector<int>& nums) {
+        int n = nums.size();
+        auto next = [&](int i) {
+            return ((i + nums[i]) % n + n) % n;
+        };
+
+        for (int i = 0; i < n; i++) {
+            int slow = i;
+            int fast = next(i);
+
+            // 每一步都要满足题目的要求，循环路径同向
+            // 注意，这里如果不加nums[slow] * nums[next(fast)] > 0
+            // 由于快指针一次走两步，可能会导致某些异号的情况漏掉，具体见下面评论
+            // 或者写成nums[slow]*nums[next(slow)] > 0 && nums[fast]*nums[next(fast)] > 0也可行
+            while (nums[slow] * nums[fast] > 0 && nums[slow] * nums[next(fast)] > 0) {
+                // 快慢指针相遇，说明存在环
+                if (slow == fast) {
+                    // 如果slow == next(slow)，说明环的长度为1
+                    if (slow == next(slow)) break;
+                    // 否则说明找到环了
+                    else return true;
+                }
+                // 快慢指针移动
+                slow = next(slow);
+                fast = next(next(fast));
+            }
+
+            // 当没找到环并且轨迹反向时，说明i作为起点这条路不通
+            // 可以将这条路上同向的部分设置成0，保证后面不再走这条同向的路
+            // 起到了剪枝的效果
+            int tmp = i;
+            while (nums[tmp] * nums[next(tmp)] > 0) {
+                int num = tmp;
+                tmp = next(num);
+                nums[num] = 0;
+            } 
+        }
+
+        return false;
+    }
+};
+```
+
+这里贴两个解释，为什么循环条件要加上nums[slow] * nums[next(fast)] > 0：
+
+<img src="https://user-images.githubusercontent.com/28688510/156629077-97cbe737-a51f-427b-83e6-e2491ac6ffef.png" width="600">
+
+<img src="https://user-images.githubusercontent.com/28688510/156629222-e50f77e6-e148-49f1-9d7d-034c33cf93e0.png" width="600">
