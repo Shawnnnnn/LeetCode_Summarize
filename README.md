@@ -1076,3 +1076,180 @@ public:
 <img src="https://user-images.githubusercontent.com/28688510/156629077-97cbe737-a51f-427b-83e6-e2491ac6ffef.png" width="600">
 
 <img src="https://user-images.githubusercontent.com/28688510/156629222-e50f77e6-e148-49f1-9d7d-034c33cf93e0.png" width="600">
+
+
+## 树
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/157081330-44df3d5d-b5c7-42b9-b03d-0275701ec86b.png">
+
+```c++
+class Solution {
+public:
+    bool isSubStructure(TreeNode* A, TreeNode* B) {
+        if (A == nullptr || B == nullptr) return false;
+        // 先序遍历时，首先判断以A为根节点的子树是否包含B
+        // 如果是，后面就不用继续递归了，所以使用||
+        return recur(A, B) || isSubStructure(A->left, B) || isSubStructure(A->right, B);
+    }
+
+    // 此函数用于判断以A为根节点的子树是否包含B
+    bool recur(TreeNode* A, TreeNode* B) {
+        // 如果B遍历到空指针了，说明前面都相等了，返回true
+        if (B == nullptr) return true;
+        // 如果AB的值不同，说明是不同的子结构
+        // 注意，这里需要添加A是否是空指针的判断
+        if (A == nullptr || A->val != B->val) return false;
+        // 如果AB值相同，继续递归判断其左右子树
+        return recur(A->left, B->left) && recur(A->right, B->right);
+    }
+};
+```
+
+
+## 合并区间
+
+合并区间模式是一种处理重叠区间的有效技术。在很多涉及区间的问题中，你既需要找到重叠的区间，也需要在这些区间重叠时合并它们。该模式的工作方式为：
+
+给定两个区间（a 和 b），这两个区间有 6 种不同的互相关联的方式：
+
+理解并识别这六种情况有助于你求解范围广泛的问题，从插入区间到优化区间合并等。
+
+那么如何确定何时该使用合并区间模式呢？
+
+如果你被要求得到一个仅含互斥区间的列表
+
+如果你听到了术语「重叠区间（overlapping intervals）」
+
+合并区间模式的问题：
+
+* 区间交叉（中等）
+
+* 最大 CPU 负载（困难）
+
+
+<img width="638" alt="image" src="https://user-images.githubusercontent.com/28688510/157081528-d2484162-e310-49ce-b897-17e93d93634d.png">
+
+注意要先按区间头点排序，再合并
+
+```c++
+class Solution {
+public:
+    vector<vector<int>> merge(vector<vector<int>>& intervals) {
+        if (intervals.size() == 0) {
+            return {};
+        }
+        sort(intervals.begin(), intervals.end());
+        vector<vector<int>> merged;
+        for (int i = 0; i < intervals.size(); ++i) {
+            int L = intervals[i][0], R = intervals[i][1];
+            if (!merged.size() || merged.back()[1] < L) {
+                merged.push_back({L, R});
+            }
+            else {
+                merged.back()[1] = max(merged.back()[1], R);
+            }
+        }
+        return merged;
+    }
+};
+```
+
+------
+
+<img width="642" alt="image" src="https://user-images.githubusercontent.com/28688510/157082064-d3fbb8bf-41f2-4bd6-a719-c35689c90056.png">
+
+这里需要注意处理插入的条件，还有最后的部分，如果没有插入要记得插入
+
+```c++
+class Solution {
+public:
+    vector<vector<int>> insert(vector<vector<int>>& intervals, vector<int>& newInterval) {
+        int n = intervals.size();
+
+        vector<vector<int>> res;
+        if (n == 0) return {newInterval};
+
+        int left = newInterval[0], right = newInterval[1];
+        
+        bool placed = false; // 记录新区间有没有插入
+        for (int i = 0; i < n; i++) {
+            // 由于intervals是升序排列
+            // 当intervals[i][0] > right时，说明后面都比right大
+            // 如果没插入left right, 此时应该插入left right
+            // 否则插入intervals[i]
+            if (intervals[i][0] > right) {
+                if (!placed) {
+                    res.push_back({left, right});
+                    placed = true;
+                }
+                res.push_back(intervals[i]);
+            }
+
+            if (intervals[i][1] < left) {
+                res.push_back(intervals[i]);
+            }
+            else {
+                left = min(intervals[i][0], left);
+                right = max(intervals[i][1], right);
+            }
+        }
+        // 这里不能忘记，如果遍历到最后都没有插入leftright，需要插入
+        if (!placed) {
+            res.push_back({left, right});
+        }
+
+        return res;
+    }
+};
+```
+
+## 堆
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/157095606-a8b14e41-e60b-428b-86f4-2f44107b88b0.png">
+
+```c++
+class Solution {
+public:
+    vector<int> getOrder(vector<vector<int>>& tasks) {
+        int n = tasks.size();
+        // 创建小顶堆
+        priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> q;
+        // index用于存储排序后的task索引位置
+        vector<int> index(n);
+
+        // 从0开始逐步加1赋初始值
+        iota(index.begin(), index.end(), 0);
+
+        // 排序
+        sort(index.begin(), index.end(), [&](int i, int j) {
+            return tasks[i][0] < tasks[j][0];
+        });
+
+        vector<int> res;
+        // 下次任务要执行的时间
+        long long t = 0; 
+        // 遍历index的指针
+        int ptr = 0;
+
+        while (res.size() != n) {
+            // 当堆为空时，说明没有待执行的任务，快进到下一次可执行的任务
+            if (q.empty()) {
+                t = max(t, (long long)tasks[index[ptr]][0]);
+            }
+            
+            // 当有任务执行时，将本次任务执行完前的其他任务入堆
+            while (ptr < n && tasks[index[ptr]][0] <= t) {
+                q.push(make_pair(tasks[index[ptr]][1], index[ptr]));
+                ptr++;
+            }
+
+            // 选择处理时间最小的任务
+            t += q.top().first;
+            res.push_back(q.top().second);
+            q.pop();
+        }
+
+        return res;
+    }
+};
+```
