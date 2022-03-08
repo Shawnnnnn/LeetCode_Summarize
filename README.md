@@ -1253,3 +1253,88 @@ public:
     }
 };
 ```
+
+## 二分法
+
+在有序的数组或者链表中，找到某个分界点，可以套用二分法，将时间复杂度降低到O(logN)
+注意二分条件，最终结果会落到left+1，要取分界点为左边均不满足结果，右边可以满足结果
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/157299667-271dfbe0-4111-4ae4-8176-d21c609f6d3b.png">
+
+```c++
+class Solution {
+public:
+    int findKthPositive(vector<int>& arr, int k) {
+        int n = arr.size();
+        int left = 0, right = n - 1;
+
+        while (left <= right) {
+            int mid = (left + right) / 2;
+            // 可知arr[mid] - mid - 1就是arr[mid]处缺失的整数个数
+            // 这里的目的是找到第一个大于或等于K的位置
+            if (arr[mid] - mid - 1 < k)
+                left = mid + 1;
+            else 
+                right = mid - 1;
+        }
+
+        // 化简 arr[left - 1] + k - (arr[left - 1] - (left - 1) - 1) 而来
+        // 可以避免left = 0时出错
+        return k + left;
+    }
+};
+```
+
+------
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/157303511-2d056d0a-58a6-493a-b701-afc0fc17fb39.png">
+
+![image](https://user-images.githubusercontent.com/28688510/157303883-9c21c5af-ec32-44d7-bd88-6ff591ac5a7f.png)
+
+![image](https://user-images.githubusercontent.com/28688510/157303938-4b1ceb92-1375-46ea-9b98-1ed86ed12e0e.png)
+
+
+```c++
+class Solution {
+public:
+    bool check(vector<vector<int>>& matrix, int k, int mid, int n) {
+        int num = 0;
+        int i = n - 1;
+        int j = 0;
+        // 沿着边界走，同时统计左上角矩阵元素的个数
+        while (i >= 0 && j < n) {
+            // 往右走
+            if (matrix[i][j] <= mid) {
+                num += i + 1; // 注意这里右走一格加一竖列的个数
+                j++;
+            }
+            // 往上走
+            else {
+                // num += j;
+                i--;
+            }
+        }
+        // cout << mid << " | " << num << endl;
+        return num < k;  // 这里不能带等号，带了会导致取mid无限循环
+    }
+    int kthSmallest(vector<vector<int>>& matrix, int k) {
+        int n = matrix.size();
+        int left = matrix[0][0];
+        int right = matrix[n-1][n-1];
+        while (left < right) {
+            // cout << left << " and " << right << endl;
+            int mid = (left + right) / 2;
+            // mid为界限划分矩阵，左上角小于等于mid，右下角大于mid
+            // 统计左上角个数，如果小于k，说明第k小的数大于mid
+            // 否则第k小的数小于等于mid
+            if (check(matrix, k, mid, n)) {
+                left = mid + 1;
+            }
+            else {
+                right = mid;
+            } 
+        }
+        return left;
+    }
+};
+```
