@@ -1338,3 +1338,116 @@ public:
     }
 };
 ```
+
+## 树
+
+### 深度优先遍历DFS
+Tree DFS 是基于深度优先搜索（DFS）技术来遍历树。
+
+你可以使用递归（或该迭代方法的技术栈）来在遍历期间保持对所有之前的（父）节点的跟踪。
+
+Tree DFS 模式的工作方式是从树的根部开始，如果这个节点不是一个叶节点，则需要做三件事：
+
+1．决定现在是处理当前的节点（pre-order），或是在处理两个子节点之间（in-order），还是在处理两个子节点之后（post-order）
+2. 为当前节点的两个子节点执行两次递归调用以处理它们
+
+如何识别 Tree DFS 模式：
+
+* 如果你被要求用 in-order、pre-order 或 post-order DFS 来遍历一个树
+* 如果问题需要搜索其中节点更接近叶节点的东西
+
+Tree DFS 模式的问题：
+
+* 路径数量之和（中等）
+* 一个和的所有路径（中等）
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/157497174-25f7926e-f14b-4765-8809-1bf07c641b43.png">
+
+1. 递归版本很简单：
+
+```c++
+class Solution {
+public:
+    void inorder(TreeNode* root, vector<int>& res) {
+        if (!root) {
+            return;
+        }
+        inorder(root->left, res);
+        res.push_back(root->val);
+        inorder(root->right, res);
+    }
+    vector<int> inorderTraversal(TreeNode* root) {
+        vector<int> res;
+        inorder(root, res);
+        return res;
+    }
+```
+
+2. 迭代版本（使用栈）相对复杂一点：
+
+```c++
+class Solution {
+public:
+    vector<int> inorderTraversal(TreeNode* root) {
+        vector<int> res;
+        stack<TreeNode*> stk;
+        while (root != nullptr || !stk.empty()) {
+            while (root != nullptr) {
+                stk.push(root);
+                root = root->left;
+            }
+            root = stk.top();
+            stk.pop();
+            res.push_back(root->val);
+            root = root->right;
+        }
+        return res;
+    }
+};
+```
+
+------
+
+后序遍历对于迭代算法来说更加复杂一些，需要记录前一个输出的节点，并判断右子树的状态来确定是输出当前结点还是先遍历右子树。
+
+```c++
+class Solution {
+public:
+    vector<int> postorderTraversal(TreeNode* root) {
+        // 迭代写法
+        vector<int> res;
+        // 用于记录上一个加入res的节点
+        TreeNode* pre = nullptr;
+        stack<TreeNode*> stk;
+
+        while (root != nullptr || !stk.empty()) {
+            // 往左孩子走到底
+            while (root != nullptr) {
+                stk.emplace(root);
+                root = root->left;
+            }
+            root = stk.top();
+            stk.pop();
+            // 判断最左节点的右孩子是否为空，若为空，则说明需要输出
+            // 或者存在右孩子且已经输出完了，输出当前节点
+            if (root->right == nullptr || root->right == pre) {
+                res.emplace_back(root->val);
+                // 记录当前输出的节点
+                pre = root;
+                // 将当前节点置为空，方便下一次循环取栈顶节点
+                root = nullptr;
+            }
+            // 如果当前节点右孩子不为空，且还没有输出右子树部分
+            // 则将当前节点重新进栈，右子树按后序遍历进栈
+            else {
+                stk.emplace(root);
+                root = root->right;
+            }
+        }
+
+        return res;
+    }
+};
+```
+
+------
