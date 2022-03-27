@@ -1078,34 +1078,6 @@ public:
 <img src="https://user-images.githubusercontent.com/28688510/156629222-e50f77e6-e148-49f1-9d7d-034c33cf93e0.png" width="600">
 
 
-## 树
-
-<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/157081330-44df3d5d-b5c7-42b9-b03d-0275701ec86b.png">
-
-```c++
-class Solution {
-public:
-    bool isSubStructure(TreeNode* A, TreeNode* B) {
-        if (A == nullptr || B == nullptr) return false;
-        // 先序遍历时，首先判断以A为根节点的子树是否包含B
-        // 如果是，后面就不用继续递归了，所以使用||
-        return recur(A, B) || isSubStructure(A->left, B) || isSubStructure(A->right, B);
-    }
-
-    // 此函数用于判断以A为根节点的子树是否包含B
-    bool recur(TreeNode* A, TreeNode* B) {
-        // 如果B遍历到空指针了，说明前面都相等了，返回true
-        if (B == nullptr) return true;
-        // 如果AB的值不同，说明是不同的子结构
-        // 注意，这里需要添加A是否是空指针的判断
-        if (A == nullptr || A->val != B->val) return false;
-        // 如果AB值相同，继续递归判断其左右子树
-        return recur(A->left, B->left) && recur(A->right, B->right);
-    }
-};
-```
-
-
 ## 合并区间
 
 合并区间模式是一种处理重叠区间的有效技术。在很多涉及区间的问题中，你既需要找到重叠的区间，也需要在这些区间重叠时合并它们。该模式的工作方式为：
@@ -1446,6 +1418,625 @@ public:
         }
 
         return res;
+    }
+};
+```
+
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/157081330-44df3d5d-b5c7-42b9-b03d-0275701ec86b.png">
+
+```c++
+class Solution {
+public:
+    bool isSubStructure(TreeNode* A, TreeNode* B) {
+        if (A == nullptr || B == nullptr) return false;
+        // 先序遍历时，首先判断以A为根节点的子树是否包含B
+        // 如果是，后面就不用继续递归了，所以使用||
+        return recur(A, B) || isSubStructure(A->left, B) || isSubStructure(A->right, B);
+    }
+
+    // 此函数用于判断以A为根节点的子树是否包含B
+    bool recur(TreeNode* A, TreeNode* B) {
+        // 如果B遍历到空指针了，说明前面都相等了，返回true
+        if (B == nullptr) return true;
+        // 如果AB的值不同，说明是不同的子结构
+        // 注意，这里需要添加A是否是空指针的判断
+        if (A == nullptr || A->val != B->val) return false;
+        // 如果AB值相同，继续递归判断其左右子树
+        return recur(A->left, B->left) && recur(A->right, B->right);
+    }
+};
+```
+
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160285014-61a629f1-8173-4c43-8d0d-8da01cfe4578.png">
+
+1. DFS递归
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160285251-64a5bbd0-4654-4fd5-8abd-2c3485f07270.png">
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160285285-ba51ab64-b4ef-4b1f-994b-449c63cb3e0b.png">
+
+```c++
+class Solution {
+public:
+    bool dfs(TreeNode* root, const long& low, const long& high) {
+        if (!root) return true;
+        if (root->val <= low || root->val >= high) return false;
+        return dfs(root->left, low, root->val) && dfs(root->right, root->val, high);
+    }
+    bool isValidBST(TreeNode* root) {
+        return dfs(root, LONG_MIN, LONG_MAX);
+    }
+};
+```
+
+2. 中序遍历
+
+根据二叉搜索树的性质可知，中序遍历的结果一定是升序的，如果出现了上一个遍历到的值大于当前遍历到的值，则说明不是AVL
+
+```c++
+class Solution {
+public:
+    bool isValidBST(TreeNode* root) {
+        stack<TreeNode*> stack;
+        long long inorder = (long long)INT_MIN - 1;
+
+        while (!stack.empty() || root != nullptr) {
+            while (root != nullptr) {
+                stack.push(root);
+                root = root -> left;
+            }
+            root = stack.top();
+            stack.pop();
+            // 如果中序遍历得到的节点的值小于等于前一个 inorder，说明不是二叉搜索树
+            if (root -> val <= inorder) {
+                return false;
+            }
+            inorder = root -> val;
+            root = root -> right;
+        }
+        return true;
+    }
+};
+```
+
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160285663-6aa3fc07-d3d5-420e-b4c7-a49686441fda.png">
+
+与上一题相同，二叉搜索树中序遍历结果一定是递增的，如果有两个数被交换，那么一定存在非递增的部分：
+注意如果是中序遍历相邻的两个节点交换位置的话，只有一个数ai > ai+1，否则会有两个数ai > ai+1，aj > aj+1
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160285733-df7e7e50-5920-4ed7-b9ab-5d4aaac2c7cb.png">
+
+```c++
+class Solution {
+public:
+    void recoverTree(TreeNode* root) {
+        stack<TreeNode*> stk;
+        TreeNode* x = nullptr;
+        TreeNode* y = nullptr;
+        TreeNode* pred = nullptr;
+
+        while (!stk.empty() || root != nullptr) {
+            while (root != nullptr) {
+                stk.push(root);
+                root = root->left;
+            }
+            root = stk.top();
+            stk.pop();
+            // 当root值小于前一个值时，说明这个数有问题
+            if (pred != nullptr && root->val < pred->val) {
+                // 因为如果存在不相邻的两个位置时，是要记录i和j+1的
+                
+                // 用y记录这个值
+                y = root;
+                // 如果之前x没有记录的话，用x记录前一个值
+                if (x == nullptr) {
+                    x = pred;
+                }
+                else break;
+            }
+            pred = root;
+            root = root->right;
+        }
+
+        swap(x->val, y->val);
+    }
+};
+```
+
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160287395-223158ab-38da-49b0-bcc7-17a64358de4a.png">
+
+1. DFS
+
+```c++
+class Solution {
+public:
+    bool isSameTree(TreeNode* p, TreeNode* q) {
+        if (p == nullptr && q == nullptr) {
+            return true;
+        } else if (p == nullptr || q == nullptr) {
+            return false;
+        } else if (p->val != q->val) {
+            return false;
+        } else {
+            return isSameTree(p->left, q->left) && isSameTree(p->right, q->right);
+        }
+    }
+};
+```
+
+2. BFS
+
+异或^ ：相同是0，不同是1
+
+```c++
+class Solution {
+public:
+    bool isSameTree(TreeNode* p, TreeNode* q) {
+        if (p == nullptr && q == nullptr) {
+            return true;
+        } else if (p == nullptr || q == nullptr) {
+            return false;
+        }
+        queue <TreeNode*> queue1, queue2;
+        queue1.push(p);
+        queue2.push(q);
+        while (!queue1.empty() && !queue2.empty()) {
+            auto node1 = queue1.front();
+            queue1.pop();
+            auto node2 = queue2.front();
+            queue2.pop();
+            if (node1->val != node2->val) {
+                return false;
+            }
+            auto left1 = node1->left, right1 = node1->right, left2 = node2->left, right2 = node2->right;
+            if ((left1 == nullptr) ^ (left2 == nullptr)) {
+                return false;
+            }
+            if ((right1 == nullptr) ^ (right2 == nullptr)) {
+                return false;
+            }
+            if (left1 != nullptr) {
+                queue1.push(left1);
+            }
+            if (right1 != nullptr) {
+                queue1.push(right1);
+            }
+            if (left2 != nullptr) {
+                queue2.push(left2);
+            }
+            if (right2 != nullptr) {
+                queue2.push(right2);
+            }
+        }
+        return queue1.empty() && queue2.empty();
+    }
+};
+```
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160287746-8dbd82d4-383b-41b7-871c-8f5d5d904b2f.png">
+
+1. DFS（递归）
+
+```c++
+class Solution {
+public:
+    bool dfs(TreeNode* left, TreeNode* right) {
+        if (!left && !right) return true;
+        if (!left || !right) return false;
+        return left->val == right->val && dfs(left->left, right->right) && dfs(left->right, right->left);
+    }
+    bool isSymmetric(TreeNode* root) {
+        if (!root) return false;
+        return dfs(root, root);
+    }
+};
+```
+
+2. BFS（迭代）
+
+```c++
+class Solution {
+public:
+    bool check(TreeNode *u, TreeNode *v) {
+        queue <TreeNode*> q;
+        q.push(u); q.push(v);
+        while (!q.empty()) {
+            u = q.front(); q.pop();
+            v = q.front(); q.pop();
+            if (!u && !v) continue;
+            if ((!u || !v) || (u->val != v->val)) return false;
+
+            q.push(u->left); 
+            q.push(v->right);
+
+            q.push(u->right); 
+            q.push(v->left);
+        }
+        return true;
+    }
+
+    bool isSymmetric(TreeNode* root) {
+        return check(root, root);
+    }
+};
+```
+
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160288338-2d2ff656-8930-4565-b03e-c967815fdfc2.png">
+
+1. DFS
+
+```c++
+class Solution {
+public:
+    int maxDepth(TreeNode* root) {
+        if (root == nullptr) return 0;
+        return max(maxDepth(root->left), maxDepth(root->right)) + 1;
+    }
+};
+```
+
+2. BFS
+
+这种做法相对繁琐一些，需要遍历的时候在内层给一个循环控制输出完一层的结点后再进行下一次的大循环
+
+```c++
+class Solution {
+public:
+    int maxDepth(TreeNode* root) {
+        if (root == nullptr) return 0;
+        queue<TreeNode*> Q;
+        Q.push(root);
+        int ans = 0;
+        while (!Q.empty()) {
+            // 控制遍历一层的结点
+            int sz = Q.size();
+            while (sz > 0) {
+                TreeNode* node = Q.front();Q.pop();
+                if (node->left) Q.push(node->left);
+                if (node->right) Q.push(node->right);
+                sz -= 1;
+            }
+            ans += 1;
+        } 
+        return ans;
+    }
+};
+```
+
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160288541-150c2dc9-79a1-4f9e-bf16-27a36ac0077f.png">
+
+1. DFS（自顶向下）
+
+这里与上一题的方法相似，先求左右子树的深度，然后判断是否相差大于1，同时左右子树是否为平衡二叉树
+
+```c++
+class Solution {
+public:
+    int height(TreeNode* root) {
+        if (root == NULL) {
+            return 0;
+        } else {
+            return max(height(root->left), height(root->right)) + 1;
+        }
+    }
+
+    bool isBalanced(TreeNode* root) {
+        if (root == NULL) {
+            return true;
+        } else {
+            return abs(height(root->left) - height(root->right)) <= 1 && isBalanced(root->left) && isBalanced(root->right);
+        }
+    }
+};
+```
+
+2. DFS（自底向上）
+
+方法一由于是自顶向下递归，因此对于同一个节点，函数 height 会被重复调用，导致时间复杂度较高。如果使用自底向上的做法，则对于每个节点，函数 height 只会被调用一次。
+
+自底向上递归的做法类似于后序遍历，对于当前遍历到的节点，先递归地判断其左右子树是否平衡，再判断以当前节点为根的子树是否平衡。如果一棵子树是平衡的，则返回其高度（高度一定是非负整数），否则返回−1。如果存在一棵子树不平衡，则整个二叉树一定不平衡。
+
+```c++
+class Solution {
+public:
+    int height(TreeNode* root) {
+        if (root == NULL) {
+            return 0;
+        }
+        int leftHeight = height(root->left);
+        int rightHeight = height(root->right);
+        if (leftHeight == -1 || rightHeight == -1 || abs(leftHeight - rightHeight) > 1) {
+            return -1;
+        } else {
+            return max(leftHeight, rightHeight) + 1;
+        }
+    }
+
+    bool isBalanced(TreeNode* root) {
+        return height(root) >= 0;
+    }
+};
+```
+
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160288967-cc51d05a-71d2-4782-81db-b98067339418.png">
+
+1. DFS
+
+```c++
+class Solution {
+public:
+    int minDepth(TreeNode *root) {
+        if (root == nullptr) {
+            return 0;
+        }
+        // 当左右子树都为空时，最小深度为1
+        if (root->left == nullptr && root->right == nullptr) {
+            return 1;
+        }
+
+        // 最小深度为左右子树的最小深度的最小值 + 1
+        int min_depth = INT_MAX;
+        if (root->left != nullptr) {
+            min_depth = min(minDepth(root->left), min_depth);
+        }
+        if (root->right != nullptr) {
+            min_depth = min(minDepth(root->right), min_depth);
+        }
+
+        return min_depth + 1;
+    }
+};
+```
+
+2. BFS
+
+```c++
+class Solution {
+public:
+    int minDepth(TreeNode *root) {
+        if (root == nullptr) {
+            return 0;
+        }
+
+        queue<pair<TreeNode *, int> > que;
+        que.emplace(root, 1);
+        while (!que.empty()) {
+            TreeNode *node = que.front().first;
+            int depth = que.front().second;
+            que.pop();
+            if (node->left == nullptr && node->right == nullptr) {
+                return depth;
+            }
+            if (node->left != nullptr) {
+                que.emplace(node->left, depth + 1);
+            }
+            if (node->right != nullptr) {
+                que.emplace(node->right, depth + 1);
+            }
+        }
+
+        return 0;
+    }
+};
+```
+
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160289330-8b158e7e-4ed7-40f5-9d04-cba3251c9731.png">
+
+1. DFS
+
+```c++
+class Solution {
+public:
+    bool hasPathSum(TreeNode* root, int sum) {
+        if (!root) {
+            return false;
+        }
+        // 为叶子节点且路径和为sum时
+        if (!(root->left || root->right) && (root->val == sum)) {
+            return true;
+        }
+        // 否则要找左孩子或右孩子节点以下是否有存在和为sum-root->val的路径
+        else {
+            return hasPathSum(root->left, sum - root->val) || hasPathSum(root->right, sum - root->val);
+        }
+    }
+};
+```
+
+2. BFS
+
+广度优先搜索比较繁琐一点，需要两个队列，一个记录遍历的结点，一个记录该节点的路径和
+
+```c++
+class Solution {
+public:
+    bool hasPathSum(TreeNode *root, int sum) {
+        if (root == nullptr) {
+            return false;
+        }
+        queue<TreeNode *> que_node;
+        queue<int> que_val;
+        que_node.push(root);
+        que_val.push(root->val);
+        while (!que_node.empty()) {
+            TreeNode *now = que_node.front();
+            int temp = que_val.front();
+            que_node.pop();
+            que_val.pop();
+            if (now->left == nullptr && now->right == nullptr) {
+                if (temp == sum) {
+                    return true;
+                }
+                continue;
+            }
+            if (now->left != nullptr) {
+                que_node.push(now->left);
+                que_val.push(now->left->val + temp);
+            }
+            if (now->right != nullptr) {
+                que_node.push(now->right);
+                que_val.push(now->right->val + temp);
+            }
+        }
+        return false;
+    }
+};
+```
+
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160289916-67943370-b9e3-4579-a904-fa9689376bf2.png">
+
+上一题的进化版，其实难度差不多，同样可以用DFS和BFS做
+
+1. DFS
+
+```c++
+class Solution {
+private:
+    vector<vector<int>> res;
+public:
+    void dfs(TreeNode* root, int targetSum, vector<int> tmp) {
+        if (!root) return;
+        tmp.push_back(root->val);
+        if (!(root->left || root->right) && root->val == targetSum) {
+            res.push_back(tmp);
+            return;
+        }
+        dfs(root->left, targetSum - root->val, tmp);
+        dfs(root->right, targetSum - root->val, tmp);
+    }
+
+    vector<vector<int>> pathSum(TreeNode* root, int targetSum) {
+        vector<int> tmp;
+        dfs(root, targetSum, tmp);
+        return res;
+    }
+};
+```
+
+2. BFS
+
+BFS更繁琐了，还需要用一个哈希表去记录父节点，然后得到整体的路径，不建议用BFS做
+
+```c++
+class Solution {
+public:
+    vector<vector<int>> ret;
+    // 记录父节点
+    unordered_map<TreeNode*, TreeNode*> parent;
+    
+    // 不断往上得到父节点，最后反转得到路径
+    void getPath(TreeNode* node) {
+        vector<int> tmp;
+        while (node != nullptr) {
+            tmp.emplace_back(node->val);
+            node = parent[node];
+        }
+        reverse(tmp.begin(), tmp.end());
+        ret.emplace_back(tmp);
+    }
+
+    vector<vector<int>> pathSum(TreeNode* root, int targetSum) {
+        if (root == nullptr) {
+            return ret;
+        }
+        
+        // BFS遍历所用的队列
+        queue<TreeNode*> que_node;
+        // 记录对应遍历位置的路径和
+        queue<int> que_sum;
+        que_node.emplace(root);
+        que_sum.emplace(0);
+
+        while (!que_node.empty()) {
+            TreeNode* node = que_node.front();
+            que_node.pop();
+            int rec = que_sum.front() + node->val;
+            que_sum.pop();
+
+            if (node->left == nullptr && node->right == nullptr) {
+                if (rec == targetSum) {
+                    getPath(node);
+                }
+            } else {
+                if (node->left != nullptr) {
+                    // 更新父节点的字典
+                    parent[node->left] = node;
+                    que_node.emplace(node->left);
+                    que_sum.emplace(rec);
+                }
+                if (node->right != nullptr) {
+                    // 更新父节点的字典
+                    parent[node->right] = node;
+                    que_node.emplace(node->right);
+                    que_sum.emplace(rec);
+                }
+            }
+        }
+
+        return ret;
+    }
+};
+```
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160290811-33d18856-6862-4ae3-a4cf-c7ca5c480e5a.png">
+
+这个思路很牛逼，建议多看，相当于倒序的前序遍历，这样就能得到前序遍历的后一个节点，然后让当前节点去指向他。
+
+```c++
+class Solution {
+public:
+    TreeNode* last = nullptr;
+    void flatten(TreeNode* root) {
+        if (root == nullptr) return;
+        flatten(root->right);
+        flatten(root->left);
+        root->right = last;
+        root->left = nullptr;
+        last = root;
+    }
+};
+```
+
+或者采用更容易理解的前序遍历+构造的形式去做
+
+```c++
+class Solution {
+public:
+    void flatten(TreeNode* root) {
+        vector<TreeNode*> l;
+        preorderTraversal(root, l);
+        int n = l.size();
+        for (int i = 1; i < n; i++) {
+            TreeNode *prev = l.at(i - 1), *curr = l.at(i);
+            prev->left = nullptr;
+            prev->right = curr;
+        }
+    }
+
+    void preorderTraversal(TreeNode* root, vector<TreeNode*> &l) {
+        if (root != NULL) {
+            l.push_back(root);
+            preorderTraversal(root->left, l);
+            preorderTraversal(root->right, l);
+        }
     }
 };
 ```
