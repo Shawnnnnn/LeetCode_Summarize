@@ -2042,3 +2042,346 @@ public:
 ```
 
 ------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160428506-c24487da-03f2-4994-8220-bc44f099b2ba.png">
+
+1. 用BFS可以很简单地做出来
+
+```c++
+class Solution {
+public:
+    Node* connect(Node* root) {
+        if (!root) return root;
+        queue<Node*> q;
+        q.push(root);
+        while (!q.empty()) {
+            int size = q.size();
+            for (int i = 0; i < size; i++) {
+                Node* tmp = q.front();
+                q.pop();
+                tmp->next = (i == size-1)? NULL: q.front();
+                if (tmp->left)
+                    q.push(tmp->left);
+                if (tmp->right)
+                    q.push(tmp->right);
+            }
+        }
+        return root;
+    }
+};
+```
+
+2. 如果面试官变态，要你用O(1)空间做，就把下面的代码呼他脸上
+
+<img width="400" alt="image" src="https://user-images.githubusercontent.com/28688510/160430597-81b25af1-8ebd-4423-8685-c7923e53d1ea.png">
+<img width="400" alt="image" src="https://user-images.githubusercontent.com/28688510/160430621-76e33cc2-9c5f-4d36-8ee3-5cc0431f9f1d.png">
+
+```c++
+class Solution {
+public:
+    Node* connect(Node* root) {
+        if (root == nullptr) {
+            return root;
+        }
+        
+        // 从根节点开始
+        Node* leftmost = root;
+        
+        while (leftmost->left != nullptr) {
+            
+            // 遍历这一层节点组织成的链表，为下一层的节点更新 next 指针
+            Node* head = leftmost;
+            
+            while (head != nullptr) {
+                
+                // CONNECTION 1
+                head->left->next = head->right;
+                
+                // CONNECTION 2
+                if (head->next != nullptr) {
+                    head->right->next = head->next->left;
+                }
+                
+                // 指针向后移动
+                head = head->next;
+            }
+            
+            // 去下一层的最左的节点
+            leftmost = leftmost->left;
+        }
+        
+        return root;
+    }
+};
+```
+
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160431381-3f6630e1-41a8-40f4-82d2-0b8be3a39aa3.png">
+
+刚说完变态，变态就来了，要求用O(1)做，且不是完美二叉树，换言之，就是不一定每个节点都有左右孩子。
+
+代码跟上一题基本一样，唯一不同就是需要一个变量去记录下一层起始点，因为不一定是最左边的做孩子了（不一定有左孩子）
+
+```c++
+class Solution {
+public:
+    void handle(Node* &last, Node* &p, Node* &nextStart) {
+        if (last) {
+            last->next = p;
+        } 
+        // 记录第一个连接的节点
+        if (!nextStart) {
+            nextStart = p;
+        }
+        last = p;
+    }
+
+    Node* connect(Node* root) {
+        if (!root) {
+            return nullptr;
+        }
+        Node *start = root;
+        while (start) {
+            Node *last = nullptr, *nextStart = nullptr;
+            for (Node *p = start; p != nullptr; p = p->next) {
+                if (p->left) {
+                    handle(last, p->left, nextStart);
+                }
+                if (p->right) {
+                    handle(last, p->right, nextStart);
+                }
+            }
+            start = nextStart;
+        }
+        return root;
+    }
+};
+```
+
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160436279-ddef8e91-30a9-4089-9dd7-f5523c772476.png">
+
+DFS递归做法，分别求两边的路径和（当计算出负数时置为0），最大路径和为左路径和+右路径和+当前节点值
+
+```c++
+class Solution {
+private:
+    int res = INT_MIN;
+public:
+    // 以root为起始点的最大路径和
+    int dfs(TreeNode* root) {
+        if (!root) return 0;
+        int left = max(dfs(root->left), 0);
+        int right = max(dfs(root->right), 0);
+        res = max(res, left + right + root->val);
+        // 因为root为起点，最终只取大的一边的路径和
+        return max(left, right) + root->val;
+    }
+
+    int maxPathSum(TreeNode* root) {
+        dfs(root);
+        return res;
+    }
+};
+```
+
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160439942-8f4179d8-e85e-4cad-a74d-5b0a6d1e3aec.png">
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160440098-d5c7bef6-689b-428f-a754-47e7b1073916.png">
+
+把标记过的字母 O 修改为字母 A
+
+1. DFS
+
+```c++
+class Solution {
+public:
+    int n, m;
+
+    void dfs(vector<vector<char>>& board, int x, int y) {
+        if (x < 0 || x >= n || y < 0 || y >= m || board[x][y] != 'O') {
+            return;
+        }
+        board[x][y] = 'A';
+        dfs(board, x + 1, y);
+        dfs(board, x - 1, y);
+        dfs(board, x, y + 1);
+        dfs(board, x, y - 1);
+    }
+
+    void solve(vector<vector<char>>& board) {
+        n = board.size();
+        if (n == 0) {
+            return;
+        }
+        m = board[0].size();
+        // 外围的O全都遍历
+        for (int i = 0; i < n; i++) {
+            dfs(board, i, 0);
+            dfs(board, i, m - 1);
+        }
+        // 外围的O全都遍历
+        for (int i = 1; i < m - 1; i++) {
+            dfs(board, 0, i);
+            dfs(board, n - 1, i);
+        }
+        
+        // 遍历过的A设回O
+        // 没遍历到的O改成X，说明是被包围住的O
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (board[i][j] == 'A') {
+                    board[i][j] = 'O';
+                } else if (board[i][j] == 'O') {
+                    board[i][j] = 'X';
+                }
+            }
+        }
+    }
+};
+```
+
+2. BFS
+
+```c++
+class Solution {
+public:
+    const int dx[4] = {1, -1, 0, 0};
+    const int dy[4] = {0, 0, 1, -1};
+
+    void solve(vector<vector<char>>& board) {
+        int n = board.size();
+        if (n == 0) {
+            return;
+        }
+        int m = board[0].size();
+        queue<pair<int, int>> que;
+        // 外围的O都遍历（入队）
+        for (int i = 0; i < n; i++) {
+            if (board[i][0] == 'O') {
+                que.emplace(i, 0);
+                board[i][0] = 'A';
+            }
+            if (board[i][m - 1] == 'O') {
+                que.emplace(i, m - 1);
+                board[i][m - 1] = 'A';
+            }
+        }
+        for (int i = 1; i < m - 1; i++) {
+            if (board[0][i] == 'O') {
+                que.emplace(0, i);
+                board[0][i] = 'A';
+            }
+            if (board[n - 1][i] == 'O') {
+                que.emplace(n - 1, i);
+                board[n - 1][i] = 'A';
+            }
+        }
+        while (!que.empty()) {
+            int x = que.front().first, y = que.front().second;
+            que.pop();
+            // 向上下左右四个方向遍历
+            for (int i = 0; i < 4; i++) {
+                int mx = x + dx[i], my = y + dy[i];
+                if (mx < 0 || my < 0 || mx >= n || my >= m || board[mx][my] != 'O') {
+                    continue;
+                }
+                que.emplace(mx, my);
+                board[mx][my] = 'A';
+            }
+        }
+        // 遍历过的A设回O
+        // 没遍历到的O改成X，说明是被包围住的O
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (board[i][j] == 'A') {
+                    board[i][j] = 'O';
+                } else if (board[i][j] == 'O') {
+                    board[i][j] = 'X';
+                }
+            }
+        }
+    }
+};
+```
+
+------
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160442305-63189f8b-94a5-44b5-8f97-9e168cf2b0e9.png">
+
+一边遍历要一边构造新的节点，两种方法都需要借助哈希表记录被克隆过的节点来避免陷入死循环
+
+1. DFS
+
+```c++
+class Solution {
+public:
+    unordered_map<Node*, Node*> visited;
+    Node* cloneGraph(Node* node) {
+        if (node == nullptr) {
+            return node;
+        }
+
+        // 如果该节点已经被访问过了，则直接从哈希表中取出对应的克隆节点返回
+        if (visited.find(node) != visited.end()) {
+            return visited[node];
+        }
+
+        // 克隆节点，注意到为了深拷贝我们不会克隆它的邻居的列表
+        Node* cloneNode = new Node(node->val);
+        // 哈希表存储
+        visited[node] = cloneNode;
+
+        // 遍历该节点的邻居并更新克隆节点的邻居列表
+        for (auto& neighbor: node->neighbors) {
+            cloneNode->neighbors.emplace_back(cloneGraph(neighbor));
+        }
+        return cloneNode;
+    }
+};
+```
+
+2. BFS
+
+```c++
+class Solution {
+public:
+    Node* cloneGraph(Node* node) {
+        if (node == nullptr) {
+            return node;
+        }
+
+        unordered_map<Node*, Node*> visited;
+
+        // 将题目给定的节点添加到队列
+        queue<Node*> Q;
+        Q.push(node);
+        // 克隆第一个节点并存储到哈希表中
+        visited[node] = new Node(node->val);
+
+        // 广度优先搜索
+        while (!Q.empty()) {
+            // 取出队列的头节点
+            auto n = Q.front();
+            Q.pop();
+            // 遍历该节点的邻居
+            for (auto& neighbor: n->neighbors) {
+                if (visited.find(neighbor) == visited.end()) {
+                    // 如果没有被访问过，就克隆并存储在哈希表中
+                    visited[neighbor] = new Node(neighbor->val);
+                    // 将邻居节点加入队列中
+                    Q.push(neighbor);
+                }
+                // 更新当前节点的邻居列表
+                visited[n]->neighbors.emplace_back(visited[neighbor]);
+            }
+        }
+
+        return visited[node];
+    }
+};
+```
