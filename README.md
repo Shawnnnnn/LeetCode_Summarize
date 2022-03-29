@@ -2385,3 +2385,60 @@ public:
     }
 };
 ```
+
+## KMP
+
+<img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160673648-495b95e9-1c82-4ca0-82b7-99561238c97f.png">
+
+这里有个[链接](https://www.zhihu.com/question/21923021/answer/281346746)讲的非常好，很详细，但是构建next数组时有循环条件有点错误，需要注意一下
+
+```c++
+class Solution {
+public:
+    int* buildNext(string s) {
+        int m = s.size();
+        int* next = new int[m];
+        next[0] = -1;
+
+        int i = 0, j = -1;
+        // 注意这里千万不能用i < m，因为先让i++ j++再next[i] = j，会导致越界
+        while (i < m - 1) {
+            if (j == -1 || s[i] == s[j]) {
+                i++;
+                j++;
+                next[i] = j;
+            }
+            else {
+                j = next[j];
+            }
+        }
+        return next;
+    }
+    int strStr(string haystack, string needle) {
+        int n = haystack.size();
+        int m = needle.size();
+        if (m == 0) {
+            return 0;
+        }
+
+        int i = 0, j = 0;
+
+        int* next = buildNext(needle);
+
+        while (i < n && j < m) {
+            if (j == -1 || haystack[i] == needle[j]) {
+                i++;
+                j++;
+            }
+            else {
+                j = next[j];
+            }
+        }
+
+        if (j == m) {
+            return i - j;
+        }
+        return -1;
+    }
+};
+```
