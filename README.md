@@ -2442,3 +2442,170 @@ public:
     }
 };
 ```
+
+## 矩阵相关
+
+<img width="518" alt="image" src="https://user-images.githubusercontent.com/28688510/160884535-d792210d-b94d-40b3-930f-d62236b036ab.png">
+
+<img width="767" alt="image" src="https://user-images.githubusercontent.com/28688510/160885023-7552a150-9c2d-42f5-8cce-c9fcacf4eabd.png">
+
+```c++
+class Solution {
+public:
+    void rotate(vector<vector<int>>& matrix) {
+        int n = matrix.size();
+        // 水平翻转
+        for (int i = 0; i < n / 2; ++i) {
+            for (int j = 0; j < n; ++j) {
+                swap(matrix[i][j], matrix[n - i - 1][j]);
+            }
+        }
+        // 主对角线翻转
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < i; ++j) {
+                swap(matrix[i][j], matrix[j][i]);
+            }
+        }
+    }
+};
+```
+
+## 括号相关
+
+一般是用来判断括号的合法性或者删除无效的括号，可以用栈来做，也可以直接通过数括号的个数来
+
+<img width="538" alt="image" src="https://user-images.githubusercontent.com/28688510/160886403-b677a88a-697b-4788-b7f9-484489900c71.png">
+
+这个题因为括号不止一种，所以只能通过栈来一个个确认
+
+```c++
+class Solution {
+public:
+    bool isValid(string s) {
+        int n = s.size();
+        if (n % 2 == 1) {
+            return false;
+        }
+        
+        // 这个字典用来区分左右括号的
+        unordered_map<char, char> pairs = {
+            {')', '('},
+            {']', '['},
+            {'}', '{'}
+        };
+        stack<char> stk;
+        for (char ch: s) {
+            // 如果是右括号
+            if (pairs.count(ch)) {
+                if (stk.empty() || stk.top() != pairs[ch]) {
+                    return false;
+                }
+                stk.pop();
+            }
+            // 如果是左括号
+            else {
+                stk.push(ch);
+            }
+        }
+        return stk.empty();
+    }
+};
+```
+
+------
+
+<img width="539" alt="image" src="https://user-images.githubusercontent.com/28688510/160887195-10fddd39-20e9-46ae-8f86-4dced33a95ab.png">
+
+这题虽然是括号，但是穷举所有可能的情况，这种需要用到回溯的方法，回溯也是需要用到递归的，**回溯的一个需要注意的点是，在回溯前做的操作，在回溯后要撤销掉，回溯时要把所有这一步能做的操作都做一遍**
+
+```c++
+class Solution {
+    void backtrack(vector<string>& ans, string& cur, int open, int close, int n) {
+        if (cur.size() == n * 2) {
+            ans.push_back(cur);
+            return;
+        }
+        
+        // *** 这里只能进行两种操作，一种加(，一种加)，都要尝试 ***
+        
+        // 当左括号小于n时才能进行
+        if (open < n) {
+            cur.push_back('(');
+            backtrack(ans, cur, open + 1, close, n);
+            cur.pop_back();
+        }
+        // 同样，右括号个数应该小于左括号个数
+        if (close < open) {
+            cur.push_back(')');
+            backtrack(ans, cur, open, close + 1, n);
+            cur.pop_back();
+        }
+        
+        // *** 尝试结束 ***
+    }
+public:
+    vector<string> generateParenthesis(int n) {
+        vector<string> result;
+        string current;
+        backtrack(result, current, 0, 0, n);
+        return result;
+    }
+};
+```
+
+------
+
+<img width="526" alt="image" src="https://user-images.githubusercontent.com/28688510/160892452-2699cf20-bce5-4573-a51b-5d0a37554d28.png">
+
+看到最长两个字，应当想到是否可以采用动态规划dp来做，当然也可以用栈来做
+
+1. dp
+
+<img width="766" alt="image" src="https://user-images.githubusercontent.com/28688510/160892965-56c511f8-51d0-44b7-96ab-766b12c3255b.png">
+
+```c++
+class Solution {
+public:
+    int longestValidParentheses(string s) {
+        int maxans = 0, n = s.length();
+        vector<int> dp(n, 0);
+        for (int i = 1; i < n; i++) {
+            if (s[i] == ')') {
+                if (s[i - 1] == '(') {
+                    dp[i] = (i >= 2 ? dp[i - 2] : 0) + 2;
+                } else if (i - dp[i - 1] > 0 && s[i - dp[i - 1] - 1] == '(') {
+                    dp[i] = dp[i - 1] + ((i - dp[i - 1]) >= 2 ? dp[i - dp[i - 1] - 2] : 0) + 2;
+                }
+                maxans = max(maxans, dp[i]);
+            }
+        }
+        return maxans;
+    }
+};
+```
+
+2. 栈
+
+```c++
+class Solution {
+public:
+    int longestValidParentheses(string s) {
+        int maxans = 0;
+        stack<int> stk;
+        stk.push(-1);
+        for (int i = 0; i < s.length(); i++) {
+            if (s[i] == '(') {
+                stk.push(i);
+            } else {
+                stk.pop();
+                if (stk.empty()) {
+                    stk.push(i);
+                } else {
+                    maxans = max(maxans, i - stk.top());
+                }
+            }
+        }
+        return maxans;
+    }
+};
+```
