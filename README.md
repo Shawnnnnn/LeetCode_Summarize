@@ -2586,6 +2586,8 @@ public:
 
 2. 栈
 
+先入栈一个-1，保证开头的括号正确时能计算出长度，后续如果栈为空时，也需要入栈一个当前位置作为计算长度的起始点。
+
 ```c++
 class Solution {
 public:
@@ -2606,6 +2608,260 @@ public:
             }
         }
         return maxans;
+    }
+};
+```
+
+------
+
+<img width="526" alt="image" src="https://user-images.githubusercontent.com/28688510/161095361-0ba74a61-8d2c-4dff-8169-62971cdfb1f1.png">
+
+* 注意这个**返回所有可能的结果**，遇到这种情况一般都需要用到**回溯**
+* 当遇到这种只有一种括号类型的需要判断是否合法时，可以通过左右括号的个数来简易判断，如果遍历过程中，右括号个数大于左括号个数则不合法，否则最终判断左括号个数是否等于右括号个数
+* 首先统计左右括号个数，得出需要删除几个左括号或几个右括号
+* 然后回溯来进行删除并判断是否合法，其中一些确定不需要回溯的情况可以剪枝掉加快速度
+
+```c++
+class Solution {
+public:
+    vector<string> res;
+    // 判断字符串的括号是否合法
+    bool isValid(const string& str) {
+        int cnt = 0;
+        for (auto& c : str) {
+            if (c == '(') {
+                cnt++;
+            }
+            else if (c == ')') {
+                cnt--;
+                if (cnt < 0) return false;
+            }
+        }
+        return cnt == 0;
+    }
+
+    vector<string> removeInvalidParentheses(string s) {
+        int lremove = 0, rremove = 0;
+        for (auto& c: s) {
+            if (c == '(') {
+                lremove++;
+            }
+            else if (c == ')') {
+                if (lremove > 0) {
+                    lremove--;
+                }
+                else {
+                    rremove++;
+                }
+            }
+        }
+        backTrack(s, 0, lremove, rremove);
+        return res;
+    }
+
+    // 回溯
+    void backTrack(string s, int start, int lremove, int rremove) {
+        // 如果左右括号都不需要再删除了，判断字符串是否合法
+        if (lremove == 0 && rremove == 0) {
+            if (isValid(s)) {
+                res.push_back(s);
+            }
+            return;
+        }
+
+        for (int i = start; i < s.size(); i++) {
+            // 如果左右括号需要删除的数目比当前字符串还多，则无需继续回溯了
+            if (lremove + rremove > s.size()) return;
+
+            // 剪枝，如果i和i-1字符相同，则无需再进行一遍
+            if (i != start && s[i] == s[i - 1]) continue;
+
+            // 删除左括号
+            if (lremove > 0 && s[i] == '(') {
+                backTrack(s.substr(0, i) + s.substr(i+1), i, lremove - 1, rremove);
+            }
+            
+            // 删除右括号
+            if (rremove > 0 && s[i] == ')') {
+                backTrack(s.substr(0, i) + s.substr(i+1), i, lremove, rremove - 1);
+            }
+        }
+    }
+};
+```
+
+------
+
+<img width="526" alt="image" src="https://user-images.githubusercontent.com/28688510/161103071-c90983f9-19f8-47ab-95f2-04ef39183252.png">
+
+```c++
+class Solution {
+public:
+    int calculate(string s) {
+        stack<int> sta;
+        char c = '+';
+        int num = 0;
+        for(int i = 0; i <= s.length(); i++){     //这里是i<=s.length();一定要有等号！！！读完数据最后一位'\0'进行最后一次计算
+            if(isdigit(s[i])){  // C 库函数 int isdigit(int c) 检查所传的字符是否是十进制数字字符
+                num = num * 10 + (s[i] - '0');
+            }else if(isspace(s[i])){  // C 库函数 int isspace(int c) 检查所传的字符是否是空白字符，包括' ','\t','\n','\v','\f','\r'
+                continue;
+            }else{
+                switch(c){
+                    case '+':
+                        sta.push(num);
+                        break;
+                    case '-':
+                        sta.push(-num);
+                        break;
+                    case '*':
+                        num*=sta.top();
+                        sta.pop();
+                        sta.push(num);
+                        break;
+                    case '/':
+                        num=sta.top()/num;
+                        sta.pop();
+                        sta.push(num);
+                        break;
+                }
+                num=0;
+                c=s[i];
+            }
+        }
+        int res=0;
+        while(!sta.empty()){
+            res+=sta.top();
+            sta.pop();
+        }
+        return res;
+    }
+};
+```
+
+## 回溯
+
+回溯算法实际上一个类似枚举的搜索尝试过程，主要是在搜索尝试过程中寻找问题的解，当发现已不满足求解条件时，就“回溯”返回，尝试别的路径。回溯法是一种选优搜索法，按选优条件向前搜索，以达到目标。但当探索到某一步时，发现原先选择并不优或达不到目标，就退回一步重新选择，这种走不通就退回再走的技术为回溯法，而满足回溯条件的某个状态的点称为“回溯点”。许多复杂的，规模较大的问题都可以使用回溯法，有“通用解题方法”的美称。
+
+* 回溯的题目都是比较有难度的，通常在middle到hard，一般通过**返回所有可能的结果**这种情况判断
+* 注意回溯的一个特点是，在回溯到一种可能的情况后要将之前做的操作抹除掉，防止一步做了多次操作
+* 回溯有时候可以通过剪枝去掉一些不可能的分支情况，用于提高运行速度
+
+用回溯算法解决问题的一般步骤：
+1. 针对所给问题，定义问题的解空间，它至少包含问题的一个（最优）解。
+2. 确定易于搜索的解空间结构,使得能用回溯法方便地搜索整个解空间 。
+3. 以深度优先的方式搜索解空间，并且在搜索过程中用剪枝函数避免无效搜索。
+
+<img width="526" alt="image" src="https://user-images.githubusercontent.com/28688510/161107615-6897209d-0c49-471b-8c01-d9d800941723.png">
+
+```c++
+class Solution {
+private:
+    unordered_map<char, string> numbers = {{'2', "abc"},
+                                           {'3', "def"},
+                                           {'4', "ghi"},
+                                           {'5', "jkl"},
+                                           {'6', "mno"},
+                                           {'7', "pqrs"},
+                                           {'8', "tuv"},
+                                           {'9', "wxyz"}};
+    vector<string> res;
+public:
+    void backTrack(string digits, int start, string& str) {
+        if (start == digits.size()) {
+            res.push_back(str);
+        }
+        else {
+            // 注意这里千万不能从start开始遍历到digits.size()，会导致后面的情况下缺失前面的部分
+            // 比如输入23，会产生'd' 'e' 'f' 三个多余的结果
+            for (auto& c: numbers[digits[start]]) {
+                str.push_back(c);
+                backTrack(digits, start + 1, str);
+                str.pop_back();
+            }
+        }
+    }
+
+    vector<string> letterCombinations(string digits) {
+        if (!digits.empty()) {
+            string s = "";
+            backTrack(digits, 0, s);
+        }
+        
+        return res;
+    }
+};
+```
+
+------
+
+<img width="526" alt="image" src="https://user-images.githubusercontent.com/28688510/161108640-0113360f-3afb-47f4-903e-355b2179556d.png">
+
+<img width="700" alt="image" src="https://user-images.githubusercontent.com/28688510/161109860-ccc77afd-b057-4a9a-b1db-3e6bc4e83349.png">
+
+<img width="700" alt="image" src="https://user-images.githubusercontent.com/28688510/161111239-a895d95d-007f-46c5-894a-c7d4187f15b2.png">
+
+```c++
+class Solution {
+private:
+    // line[x][y]表示第x-1行是否出现过y-1数字
+    bool line[9][9];
+    // column[x][y]表示第x-1列是否出现过y-1数字
+    bool column[9][9];
+    // block[x][y][z]表示第x-1行第y-1个块是否出现过z-1数字
+    bool block[3][3][9];
+    // 用于记录是否将空位全部填满
+    bool valid;
+    // spaces用于保存需要填数字的位置
+    vector<pair<int, int>> spaces;
+
+public:
+    void dfs(vector<vector<char>>& board, int pos) {
+        // 当空格全部填满，valid = true并返回
+        if (pos == spaces.size()) {
+            valid = true;
+            return;
+        }
+
+        // 取出需要填的空格
+        auto [i, j] = spaces[pos];
+        // 遍历可以填的数字
+        for (int digit = 0; digit < 9 && !valid; ++digit) {
+            // 当满足所有限制条件时，才可以填这个数
+            if (!line[i][digit] && !column[j][digit] && !block[i / 3][j / 3][digit]) {
+                // 填数并将状态更新
+                line[i][digit] = column[j][digit] = block[i / 3][j / 3][digit] = true;
+                board[i][j] = digit + '0' + 1;
+                dfs(board, pos + 1);
+                // 回溯时要将之前做的操作还原
+                line[i][digit] = column[j][digit] = block[i / 3][j / 3][digit] = false;
+            }
+        }
+    }
+
+    void solveSudoku(vector<vector<char>>& board) {
+        memset(line, false, sizeof(line));
+        memset(column, false, sizeof(column));
+        memset(block, false, sizeof(block));
+        valid = false;
+
+        for (int i = 0; i < 9; ++i) {
+            for (int j = 0; j < 9; ++j) {
+                // 如果当前位置是空格，则加入spaces
+                if (board[i][j] == '.') {
+                    spaces.emplace_back(i, j);
+                }
+                // 如果当前是数字，则更新line column block对应位置为true
+                else {
+                    int digit = board[i][j] - '0' - 1;
+                    
+                    line[i][digit] = column[j][digit] = block[i / 3][j / 3][digit] = true;
+                }
+            }
+        }
+        
+        // 开始回溯
+        dfs(board, 0);
     }
 };
 ```
