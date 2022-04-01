@@ -2865,3 +2865,220 @@ public:
     }
 };
 ```
+
+------
+
+再来一题与上题类似的典型问题，N皇后
+
+<img width="526" alt="image" src="https://user-images.githubusercontent.com/28688510/161305839-5930979a-5864-4599-934d-66e7a54a9634.png">
+
+因为皇后是可以横竖斜着走的，我们要让所有的皇后不能互相攻击，就要让每个皇后的行、列、斜对角线均没有其他皇后
+
+回溯的具体做法是：使用一个数组记录每行放置的皇后的列下标，依次在每一行放置一个皇后。每次新放置的皇后都不能和已经放置的皇后之间有攻击：即新放置的皇后不能和任何一个已经放置的皇后在同一列以及同一条斜线上，并更新数组中的当前行的皇后列下标。当 N 个皇后都放置完毕，则找到一个可能的解。当找到一个可能的解之后，将数组转换成表示棋盘状态的列表，并将该棋盘状态的列表加入返回列表。
+
+由于每个皇后必须位于不同列，因此已经放置的皇后所在的列不能放置别的皇后。第一个皇后有 N 列可以选择，第二个皇后最多有 N-1 列可以选择，第三个皇后最多有 N-2 列可以选择（如果考虑到不能在同一条斜线上，可能的选择数量更少），因此所有可能的情况不会超过 N! 种，遍历这些情况的时间复杂度是 O(N!)。
+
+为了降低总时间复杂度，每次放置皇后时需要快速判断每个位置是否可以放置皇后，显然，最理想的情况是在 O(1) 的时间内判断该位置所在的列和两条斜线上是否已经有皇后。
+
+<img width="700" alt="image" src="https://user-images.githubusercontent.com/28688510/161307587-de446d4f-7c6f-428b-995e-1cee1de0a2e0.png">
+
+<img width="700" alt="image" src="https://user-images.githubusercontent.com/28688510/161307658-23331093-6333-41c4-b9c0-5dbc3cc63849.png">
+
+```c++
+class Solution {
+public:
+    vector<vector<string>> solveNQueens(int n) {
+        auto solutions = vector<vector<string>>();  // 最终结果
+        auto queens = vector<int>(n, -1);           // 每一行的皇后所在列数
+        auto columns = unordered_set<int>();        // 是否在一列
+        auto diagonals1 = unordered_set<int>();     // 是否在右斜线上
+        auto diagonals2 = unordered_set<int>();     // 是否在左斜线上
+        backtrack(solutions, queens, n, 0, columns, diagonals1, diagonals2);
+        return solutions;
+    }
+    
+    // 回溯，每次填一行的皇后，row表示当前要填的行
+    void backtrack(vector<vector<string>> &solutions, vector<int> &queens, int n, int row, unordered_set<int> &columns, unordered_set<int> &diagonals1, unordered_set<int> &diagonals2) {
+        // 当row到达n时，说明0到n-1都填完了，说明已经完成了一个可行解
+        if (row == n) {
+            vector<string> board = generateBoard(queens, n);
+            solutions.push_back(board);
+        } else {
+            // 从0到n-1遍历第row行可能插入皇后的列
+            for (int i = 0; i < n; i++) {
+                // 如果这一列有其他皇后了，跳过
+                if (columns.find(i) != columns.end()) {
+                    continue;
+                }
+                // 如果这一左斜对角有其他皇后了，跳过
+                int diagonal1 = row - i;
+                if (diagonals1.find(diagonal1) != diagonals1.end()) {
+                    continue;
+                }
+                // 如果这一右斜对角有其他皇后了，跳过
+                int diagonal2 = row + i;
+                if (diagonals2.find(diagonal2) != diagonals2.end()) {
+                    continue;
+                }
+                // 如果均满足条件，则将皇后填到这个位置，并更新状态
+                queens[row] = i;
+                columns.insert(i);
+                diagonals1.insert(diagonal1);
+                diagonals2.insert(diagonal2);
+                // 进行下一行皇后的放置
+                backtrack(solutions, queens, n, row + 1, columns, diagonals1, diagonals2);
+                // 回溯，取消皇后的放置并重置状态
+                queens[row] = -1;
+                columns.erase(i);
+                diagonals1.erase(diagonal1);
+                diagonals2.erase(diagonal2);
+            }
+        }
+    }
+
+    // 根据皇后的放置位置进行棋盘矩阵的绘制
+    vector<string> generateBoard(vector<int> &queens, int n) {
+        auto board = vector<string>();
+        for (int i = 0; i < n; i++) {
+            string row = string(n, '.');
+            row[queens[i]] = 'Q';
+            board.push_back(row);
+        }
+        return board;
+    }
+};
+```
+
+不难发现这题与解数独基本一致，需要知道的是：
+* 斜对角的状态该如何保存
+* 遍历可能存在的位置时要如何过滤掉错误的位置（通过多个状态进行过滤）
+* 回溯后切记要恢复之前的状态。
+
+------
+
+一样的题，只不过不用返回棋盘了，返回解的个数
+
+<img width="526" alt="image" src="https://user-images.githubusercontent.com/28688510/161310820-ff7c5b98-59a7-4cc1-89b1-c6c9f37c02ff.png">
+
+```c++
+class Solution {
+public:
+    int res = 0;
+    int totalNQueens(int n) {
+        unordered_set<int> col;
+        unordered_set<int> left_diagonal;
+        unordered_set<int> right_diagonal;
+
+        backTrack(n, 0, col, left_diagonal, right_diagonal);
+        return res;
+    }
+
+    void backTrack(const int& n, int row, unordered_set<int>& col, unordered_set<int>& left_diagonal, unordered_set<int>& right_diagonal) {
+        // 当row到达n时，说明0到n-1都填完了，说明已经完成了一个可行解
+        if (row == n) {
+            res++;
+            return;
+        }
+        else {
+            // 从0到n-1遍历第row行可能插入皇后的列
+            for (int i = 0; i < n; i++) {
+                // 如果这一列有其他皇后了，跳过
+                if (col.count(i)) {
+                    continue;
+                }
+                // 如果这一左斜对角有其他皇后了，跳过
+                if (left_diagonal.count(row - i)) {
+                    continue;
+                }
+                // 如果这一右斜对角有其他皇后了，跳过
+                if (right_diagonal.count(row + i)) {
+                    continue;
+                }
+
+                // 这个位置可以放置皇后，更新状态
+                col.insert(i);
+                left_diagonal.insert(row - i);
+                right_diagonal.insert(row + i);
+
+                // 进行下一行皇后的放置
+                backTrack(n, row + 1, col, left_diagonal, right_diagonal);
+
+                // 回溯，取消皇后的放置并重置状态
+                col.erase(i);
+                left_diagonal.erase(row - i);
+                right_diagonal.erase(row + i);
+            }
+        }
+    }
+};
+```
+
+------
+
+<img width="526" alt="image" src="https://user-images.githubusercontent.com/28688510/161312256-2c88387c-a4e3-4def-8064-8415b095ab81.png">
+
+这题题目限制了正整数，所以可以通过candidates[i] <= target来进行剪枝，避免不必要的遍历。
+
+```c++
+class Solution {
+private:
+    vector<vector<int>> res;
+    vector<int> midres;
+public:
+    void dfs(vector<int>& candidates, int target, int start, vector<int>& midres) {      
+        if (target == 0) {
+            res.emplace_back(midres);
+            return;
+        }
+        for (int i = start; i < candidates.size(); i++) {
+            // 小于target的正整数才需要遍历
+            if (candidates[i] <= target) {
+                midres.emplace_back(candidates[i]);
+                dfs(candidates, target - candidates[i], i, midres);
+                midres.pop_back();
+            }
+        }
+    }
+    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {
+        dfs(candidates, target, 0, midres);
+        return res;
+    }
+};
+```
+
+------
+
+<img width="526" alt="image" src="https://user-images.githubusercontent.com/28688510/161315648-712bcd21-7b70-4fdd-8344-6046763bb8fa.png">
+
+这题与上面的不同在于，每个数字只能取一次，且结果不能有重复的。我们只需要把递归的条件从i变成i+1，且在循环时加上一句判断if(i > start && candidates[i] == candidates[i-1]) continue;避免重复情况出现即可。
+
+```c++
+class Solution {
+private:
+    vector<vector<int>> res;
+    vector<int> midres;
+public:
+    void dfs(vector<int>& candidates, int target, int start, vector<int>& midres) {        
+        if (target == 0) {
+            res.emplace_back(midres);
+            return;
+        }
+        // 因为candidates排过序，所以candidates[i] <= target的判断放在循环条件里，如果不满足则后面的都不满足
+        for (int i = start; i < candidates.size() && candidates[i] <= target; i++) {
+            // 避免重复情况出现
+            if (i > start && candidates[i] == candidates[i - 1])
+                continue;
+            midres.emplace_back(candidates[i]);
+            // 注意这里需要把i变成i+1，因为不能重复取一个数多次
+            dfs(candidates, target - candidates[i], i + 1, midres);
+            midres.pop_back();
+        }
+    }
+    vector<vector<int>> combinationSum2(vector<int>& candidates, int target) {
+        // 排序让相同的数排列在一起
+        sort(candidates.begin(), candidates.end());
+        dfs(candidates, target, 0, midres);
+        return res;
+    }
+};
+```
