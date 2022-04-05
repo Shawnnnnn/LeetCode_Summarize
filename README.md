@@ -3082,3 +3082,150 @@ public:
     }
 };
 ```
+
+------
+
+<img width="529" alt="image" src="https://user-images.githubusercontent.com/28688510/161796497-32d60677-2eac-4b84-a97e-86cf950fb49d.png">
+
+```c++
+class Solution {
+    vector<int> vis;
+
+public:
+    void backtrack(vector<int>& nums, vector<vector<int>>& ans, int idx, vector<int>& perm) {
+        if (idx == nums.size()) {
+            ans.emplace_back(perm);
+            return;
+        }
+        for (int i = 0; i < (int)nums.size(); ++i) {
+            if (vis[i] || (i > 0 && nums[i] == nums[i - 1] && !vis[i - 1])) {
+                continue;
+            }
+            perm.emplace_back(nums[i]);
+            vis[i] = 1;
+            backtrack(nums, ans, idx + 1, perm);
+            vis[i] = 0;
+            perm.pop_back();
+        }
+    }
+
+    vector<vector<int>> permuteUnique(vector<int>& nums) {
+        vector<vector<int>> ans;
+        vector<int> perm;
+        vis.resize(nums.size());
+        sort(nums.begin(), nums.end());
+        backtrack(nums, ans, 0, perm);
+        return ans;
+    }
+};
+```
+
+这里解释一下为什么加了i > 0 && nums[i] == nums[i - 1] && !vis[i - 1]这个条件就可以限制重复结果的产生了：
+
+加上 !vis[i - 1]来去重主要是通过限制一下两个相邻的重复数字的访问顺序
+
+举个栗子，对于两个相同的数11，我们将其命名为1a 1b, 1a表示第一个1，1b表示第二个1； 那么，不做去重的话，会有两种重复排列 1a1b, 1b1a， 我们只需要取其中任意一种排列； 为了达到这个目的，限制一下1a, 1b访问顺序即可。 比如我们只取1a1b那个排列的话，只有当visit nums[i-1]之后我们才去visit nums[i]， 也就是如果!visited[i-1]的话则continue
+
+------
+
+<img width="529" alt="image" src="https://user-images.githubusercontent.com/28688510/161800002-213a1a1c-04cf-4f52-8330-0d25ff5ff801.png">
+
+注意剪枝，其他没啥
+
+```c++
+class Solution {
+public:
+    vector<vector<int>> res;
+    vector<vector<int>> combine(int n, int k) {
+        vector<int> mid_res;
+        
+        backTrack(n, k, 1, 0, mid_res);
+        return res;
+    }
+
+    void backTrack(int n, int k, int start, int count, vector<int>& mid_res) {
+        // 剪枝
+        if (count + (n - start + 1) < k)
+            return;
+        
+        if (count == k) {
+            res.push_back(mid_res);
+            return;
+        }
+
+        for (int i = start; i <= n; i++) {            
+            mid_res.push_back(i);
+
+            backTrack(n, k, i + 1, count + 1, mid_res);
+
+            mid_res.pop_back();
+        }
+    }
+};
+```
+
+------
+
+<img width="524" alt="image" src="https://user-images.githubusercontent.com/28688510/161808368-050929e8-e6d6-48cb-bd0c-4582d737f650.png">
+
+这里有点不一样，当前元素可选可不选
+
+```c++
+class Solution {
+private:
+    vector<vector<int>> res;
+    vector<int> mid_res;
+public:
+    void dfs(vector<int>& nums,int start){
+        // 因为要取所有子集，所以每次dfs（当前元素选或者不选）都要加入结果
+        res.push_back(mid_res);
+        // 满足条件结束dfs
+        if(start == nums.size()) return ;
+
+        // 对于没选过的元素进行遍历
+        for(int i = start; i < nums.size(); ++i){
+            mid_res.push_back(nums[i]);
+            dfs(nums, i + 1);
+            mid_res.pop_back();
+        }
+    }
+    vector<vector<int>> subsets(vector<int>& nums) {
+        dfs(nums, 0);
+        return res;
+    }
+};
+```
+
+------
+
+<img width="526" alt="image" src="https://user-images.githubusercontent.com/28688510/161816494-adf976af-8441-4aab-a694-0c2d932eda60.png">
+
+```c++
+class Solution {
+private:
+    vector<vector<int>> res;
+    vector<int> mid_res;
+public:
+    void dfs(vector<int>& nums,int start){
+        // 因为要取所有子集，所以每次dfs（当前元素选或者不选）都要加入结果
+        res.push_back(mid_res);
+        // 满足条件结束dfs
+        if(start == nums.size()) return ;
+
+        // 对于没选过的元素进行遍历
+        for(int i = start; i < nums.size(); ++i){
+            // 如果nums[i] == nums[i-1]再选会产生重复结果，因此跳过
+            if(i > start && nums[i] == nums[i-1])
+                continue;
+            mid_res.push_back(nums[i]);
+            dfs(nums, i + 1);
+            mid_res.pop_back();
+        }
+    }
+    vector<vector<int>> subsetsWithDup(vector<int>& nums) {
+        sort(nums.begin(),nums.end());
+        dfs(nums, 0);
+        return res;
+    }
+};
+```
