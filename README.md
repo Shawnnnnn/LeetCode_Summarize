@@ -3229,3 +3229,67 @@ public:
     }
 };
 ```
+
+------
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162034697-f664ab34-6fd8-40cc-8da7-92aed064c1b5.png">
+
+```c++
+class Solution {
+public:
+    // 可以遍历的四个方向
+    vector<pair<int, int>> direction = {{0, -1},
+                                        {-1, 0},
+                                        {0, 1},
+                                        {1, 0}};
+                                        
+    bool exist(vector<vector<char>>& board, string word) {
+        vector<vector<int>> visited(board.size(), vector<int>(board[0].size()));
+        // 要对每个元素都作为起始点进行遍历
+        for (int i = 0; i < board.size(); i++) {
+            for (int j = 0; j < board[0].size(); j++) {
+                if (backTrack(board, visited, word, 0, i, j))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    bool backTrack(vector<vector<char>>& board, vector<vector<int>>& visited, string word, int ind,
+                    int x, int y) {
+        if (board[x][y] != word[ind])
+        {
+            return false;
+        }
+        else if (ind == word.size() - 1) {
+            return true;
+        }
+
+        // 当不满足上述true或者false的条件时，说明是在遍历途中
+        // 取当前元素
+        visited[x][y] = 1;
+        bool result = false;
+        
+        // 朝四个方向遍历
+        for (int i = 0; i < 4; i++) {
+            int newx = x + direction[i].first;
+            int newy = y + direction[i].second;
+            
+            // 只取边界范围内的未遍历过的元素
+            if (newx >= 0 && newx < board.size() && newy >= 0 && newy < board[0].size()) {
+                if (!visited[newx][newy]) {
+                    // 如果成功了，则返回
+                    if (backTrack(board, visited, word, ind + 1, newx, newy)) {
+                        result = true;
+                        break;
+                    }
+                }
+            }
+        }
+        // 如果四个方向均不行，则这个元素不对，回溯到上一个元素，这个元素的状态恢复
+        visited[x][y] = 0;
+
+        return result;
+    }
+};
+```
