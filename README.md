@@ -2386,6 +2386,47 @@ public:
 };
 ```
 
+------
+
+<img width="524" alt="image" src="https://user-images.githubusercontent.com/28688510/162251798-2fee79c9-857e-4bd0-9790-c34edb671096.png">
+
+```c++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+public:
+    vector<string> res;
+    vector<string> binaryTreePaths(TreeNode* root) {
+        string tmp = "";
+        dfs(root, tmp);
+        return res;
+    }
+
+    void dfs(TreeNode* root, string tmp) {
+        if (!root) return;
+        tmp += to_string(root->val) + "->";
+        if (!(root->left || root->right)) {
+            tmp.pop_back();
+            tmp.pop_back();
+            res.emplace_back(tmp);
+            return;
+        }
+        dfs(root->left, tmp);
+        dfs(root->right, tmp);
+    }
+};
+```
+
+
 ## KMP
 
 <img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160673648-495b95e9-1c82-4ca0-82b7-99561238c97f.png">
@@ -3293,3 +3334,50 @@ public:
     }
 };
 ```
+
+------
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162248895-2df7b8eb-9a88-46f5-9f29-498b7d9ac2f9.png">
+
+这题不算回溯，就是单纯地利用二叉树的性质去递归，写一个递归函数用于生成所有可能存在的结果集合，然后分别递归调用生成左子树结果集合和右子树结果集合，然后分别从这两个集合中取出来组成结果即可
+
+```c++
+class Solution {
+public:
+    vector<TreeNode*> generateTrees(int start, int end) {
+        if (start > end) {
+            return { nullptr };
+        }
+        vector<TreeNode*> allTrees;
+        // 枚举可行根节点
+        for (int i = start; i <= end; i++) {
+            // 获得所有可行的左子树集合
+            vector<TreeNode*> leftTrees = generateTrees(start, i - 1);
+
+            // 获得所有可行的右子树集合
+            vector<TreeNode*> rightTrees = generateTrees(i + 1, end);
+
+            // 从左子树集合中选出一棵左子树，从右子树集合中选出一棵右子树，拼接到根节点上
+            for (auto& left : leftTrees) {
+                for (auto& right : rightTrees) {
+                    TreeNode* currTree = new TreeNode(i);
+                    currTree->left = left;
+                    currTree->right = right;
+                    allTrees.emplace_back(currTree);
+                }
+            }
+        }
+        return allTrees;
+    }
+
+    vector<TreeNode*> generateTrees(int n) {
+        if (!n) {
+            return {};
+        }
+        return generateTrees(1, n);
+    }
+};
+```
+
+------
+
