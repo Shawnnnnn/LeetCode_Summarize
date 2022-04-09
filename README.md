@@ -82,7 +82,9 @@ public:
 };
 ```
 ------
+
 <img src="https://user-images.githubusercontent.com/28688510/155186443-7e951105-7714-4bac-b8b7-1ab266e3f879.png" width="500">
+
 对于下标 i，下雨后水能到达的最大高度等于下标 i 两边的最大高度的最小值，下标 i 处能接的雨水量等于下标 i 处的水能到达的最大高度减去 height[i]。
 　
 
@@ -3381,3 +3383,326 @@ public:
 
 ------
 
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162559335-ceaa2520-bd22-4946-acb9-10fdebe43784.png">
+
+这题要分位置来看，每个位置选或者不选两种情况，同时要注意满足递增且不重复的条件
+
+一开始想着用之前的方法，每一步都循环后面所有的元素去遍历，然后通过visited+前后元素是否相同来去重，结果有些例子通不过
+
+```c++
+class Solution {
+public:
+    vector<vector<int>> res;
+    vector<vector<int>> findSubsequences(vector<int>& nums) {
+        vector<int> mid_res;
+        backTrack(nums, INT_MIN, 0, mid_res);
+        return res;
+    }
+
+    void backTrack(vector<int>& nums, int last, int cur, vector<int>& mid_res) {
+        if (cur == nums.size()) {
+            if (mid_res.size() >= 2) {
+                res.push_back(mid_res);
+            }
+            return;
+        }
+
+        // 选择cur位置的元素
+        // nums[cur] >= last保证结果是递增
+        if (nums[cur] >= last) {
+            mid_res.push_back(nums[cur]);
+            backTrack(nums, nums[cur], cur + 1, mid_res);
+            mid_res.pop_back();
+        }
+        
+        // 不选择cur位置的元素
+        // 这里判断nums[cur] != last为了去重
+        if (nums[cur] != last) {
+            backTrack(nums, last, cur + 1, mid_res);
+        }
+    }
+};
+```
+
+------
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162563105-f01e64f5-9d65-489f-9f3d-a58e7e34ef3a.png">
+
+这个递归版本很容易就能写出来了，每个位置元素取正反即可
+
+```c++
+class Solution {
+public:
+    int res;
+    int findTargetSumWays(vector<int>& nums, int target) {
+        dfs(nums, target, 0);
+        return res;
+    }
+    void dfs(vector<int>& nums, int target, int cur) {
+        if (cur == nums.size()) {
+            if (target == 0) {
+                res++;
+            }
+            return;
+        }
+
+        dfs(nums, target - nums[cur], cur + 1);
+        dfs(nums, target + nums[cur], cur + 1);
+    }
+};
+```
+
+但是这一题是典型的0-1背包问题，用上述的回溯方法会导致复杂度很高，达到指数级别O(2^N)，如果采用背包问题的DP解法，会大幅度降低时间复杂度。
+
+<img width="625" alt="image" src="https://user-images.githubusercontent.com/28688510/162567161-ea555780-5efd-42c2-9182-6a2a78102093.png">
+
+<img width="625" alt="image" src="https://user-images.githubusercontent.com/28688510/162567460-6a2baa6f-b30e-4a7c-8da8-4d86ec4c021f.png">
+
+```c++
+class Solution {
+public:
+    int findTargetSumWays(vector<int>& nums, int target) {
+        // 求和
+        int sum = 0;
+        for (int& num : nums) {
+            sum += num;
+        }
+        // 如果diff小于0，则说明没有满足的负数和
+        int diff = sum - target;
+        if (diff < 0 || diff % 2 != 0) {
+            return 0;
+        }
+        int n = nums.size(), neg = diff / 2;
+        
+        // dp
+        vector<vector<int>> dp(n + 1, vector<int>(neg + 1));
+        dp[0][0] = 1;
+        for (int i = 1; i <= n; i++) {
+            int num = nums[i - 1];
+            for (int j = 0; j <= neg; j++) {
+                dp[i][j] = dp[i - 1][j];
+                // 如果j大于当前num，则可以取当前num的结果
+                if (j >= num) {
+                    dp[i][j] += dp[i - 1][j - num];
+                }
+            }
+        }
+        return dp[n][neg];
+    }
+};
+```
+
+当然可以继续对二维DP数组进行优化，可以发现dp[i][j]只与dp[i-1][]有关，所以可以省去第一维，但是要注意dp更新时的遍历方向
+
+```c++
+class Solution {
+public:
+    int findTargetSumWays(vector<int>& nums, int target) {
+        int sum = 0;
+        for (int& num : nums) {
+            sum += num;
+        }
+        int diff = sum - target;
+        if (diff < 0 || diff % 2 != 0) {
+            return 0;
+        }
+        int neg = diff / 2;
+        vector<int> dp(neg + 1);
+        dp[0] = 1;
+        for (int& num : nums) {
+            // 注意这里要反向遍历，保证转移来的是dp[i−1][]中的元素值
+            for (int j = neg; j >= num; j--) {
+                dp[j] += dp[j - num];
+            }
+        }
+        return dp[neg];
+    }
+};
+```
+
+## 动态规划
+
+上面提到了0-1背包问题，那么就不得不提到我们常用的解题方法，动态规划DP了。
+
+动态规划一般分为几步：
+1. 建立dp数组
+2. 考虑边界条件初始化
+3. 状态转移方程
+4. 更新dp数组
+5. 得出最终结果
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162569173-ed6a1a1c-7148-40ae-b315-4e0004fc7456.png">
+
+<img width="625" alt="image" src="https://user-images.githubusercontent.com/28688510/162569575-b77dc484-fd46-48d4-af67-223fd2b3a73a.png">
+
+```c++
+class Solution {
+public:
+    string longestPalindrome(string s) {
+        int n = s.size();
+        if (n < 2) {
+            return s;
+        }
+
+        int maxLen = 1;
+        int begin = 0;
+        // dp[i][j] 表示 s[i..j] 是否是回文串
+        vector<vector<int>> dp(n, vector<int>(n));
+        // 初始化：所有长度为 1 的子串都是回文串
+        for (int i = 0; i < n; i++) {
+            dp[i][i] = true;
+        }
+        // 递推开始
+        // 先枚举子串长度
+        for (int L = 2; L <= n; L++) {
+            // 枚举左边界，左边界的上限设置可以宽松一些
+            for (int i = 0; i < n; i++) {
+                // 由 L 和 i 可以确定右边界，即 j - i + 1 = L 得
+                int j = L + i - 1;
+                // 如果右边界越界，就可以退出当前循环
+                if (j >= n) {
+                    break;
+                }
+
+                if (s[i] != s[j]) {
+                    dp[i][j] = false;
+                } else {
+                    if (j - i < 3) {
+                        dp[i][j] = true;
+                    } else {
+                        dp[i][j] = dp[i + 1][j - 1];
+                    }
+                }
+
+                // 只要 dp[i][L] == true 成立，就表示子串 s[i..L] 是回文，此时记录回文长度和起始位置
+                if (dp[i][j] && j - i + 1 > maxLen) {
+                    maxLen = j - i + 1;
+                    begin = i;
+                }
+            }
+        }
+        return s.substr(begin, maxLen);
+    }
+};
+```
+
+另一版超级简洁的
+
+```c++
+class Solution {
+public:
+    string longestPalindrome(string s) {
+        int n = s.size();
+        vector<vector<int>> dp(n, vector<int>(n));
+        string ans;
+        for (int l = 0; l < n; ++l) {
+            for (int i = 0; i + l < n; ++i) {
+                int j = i + l;
+                if (l == 0) {
+                    dp[i][j] = 1;
+                } else if (l == 1) {
+                    dp[i][j] = (s[i] == s[j]);
+                } else {
+                    dp[i][j] = (s[i] == s[j] && dp[i + 1][j - 1]);
+                }
+                if (dp[i][j] && l + 1 > ans.size()) {
+                    ans = s.substr(i, l + 1);
+                }
+            }
+        }
+        return ans;
+    }
+};
+```
+
+------
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162581816-ee69c740-0d40-41f3-869a-81d97b58620f.png">
+
+这题的边界情况十分复杂，可以查看这个[题解](https://leetcode-cn.com/problems/regular-expression-matching/solution/shou-hui-tu-jie-wo-tai-nan-liao-by-hyj8/)进行详细了解，需要注意的是，从后往前比较会好理解一些。
+
+```c++
+class Solution {
+public:
+    bool isMatch(string s, string p) {
+        int m = s.size();
+        int n = p.size();
+
+        // dp[i][j]表示s[0:i-1]与p[0:j-1]是否匹配
+        vector<vector<int>> dp(m + 1, vector<int>(n + 1));
+        // 初始化
+        dp[0][0] = true;
+        // 如果i为0，考虑p[j-1]是否等于*，若不等，则false，若等，则可以去掉p最后两个字符，继续判断dp[0][j-2]
+        for (int j = 1; j <= n; j++) {
+            if (p[j - 1] == '*') 
+                dp[0][j] = dp[0][j - 2];
+        }
+
+        // 循环更新dp
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                // 情况1：如果s[i-1]和p[j-1]匹配
+                if (s[i - 1] == p[j - 1] || p[j - 1] == '.')
+                    dp[i][j] = dp[i - 1][j - 1];
+                // 情况2：如果s[i-1]和p[j-1]不匹配，分两种情况
+                else {
+                    // 情况2.1：p[j-1]为*，分两种情况
+                    if (p[j - 1] == '*') {
+                        // 情况2.1.1：s[i-1]匹配p[j-2]
+                        if (s[i - 1] == p[j - 2] || p[j - 2] == '.') {
+                            // *重复0次或者1次或者2次以上
+                            dp[i][j] = dp[i][j - 2] || dp[i - 1][j - 2] || dp[i - 1][j];
+                        }
+                        // 情况2.1.2：s[i-1]不匹配p[j-2]，可以认为*重复0次，继续判断
+                        else {
+                            dp[i][j] = dp[i][j - 2];
+                        }
+                    }
+                    // 情况2.2：s[i-1]不等于p[j-1]
+                    else
+                        dp[i][j] = false;
+                }
+            }
+        }
+        return dp[m][n];
+    }
+};
+```
+
+------
+
+接雨水
+
+<img src="https://user-images.githubusercontent.com/28688510/155186443-7e951105-7714-4bac-b8b7-1ab266e3f879.png" width="500">
+
+这题上面有单调栈的做法很好理解，dp的话是针对于暴力解法的一种优化，leftmax和rightmax用于保存i及其左右范围内的最大高度
+
+```c++
+class Solution {
+public:
+    int trap(vector<int>& height) {
+        int n = height.size();
+        if (n <= 2) return 0;
+
+        int res = 0;
+
+        vector<int> leftmax(n);
+        leftmax[0] = height[0];
+        for (int i = 1; i < n; i++) {
+            leftmax[i] = max(leftmax[i - 1], height[i]);
+        }
+
+        vector<int> rightmax(n);
+        rightmax[n - 1] = height[n - 1];
+        for (int i = n - 2; i >= 0; i--) {
+            rightmax[i] = max(rightmax[i + 1], height[i]);
+        }
+
+        for (int i = 0; i < n; i++) {
+            res += min(leftmax[i], rightmax[i]) - height[i]; 
+        }
+
+        return res;
+    }
+};
+```
