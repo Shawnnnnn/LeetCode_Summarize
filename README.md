@@ -3617,7 +3617,9 @@ public:
 
 ------
 
-<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162581816-ee69c740-0d40-41f3-869a-81d97b58620f.png">
+正则表达式
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162583272-a1b044ff-21a2-4fea-93ac-8796b8703f37.png">
 
 这题的边界情况十分复杂，可以查看这个[题解](https://leetcode-cn.com/problems/regular-expression-matching/solution/shou-hui-tu-jie-wo-tai-nan-liao-by-hyj8/)进行详细了解，需要注意的是，从后往前比较会好理解一些。
 
