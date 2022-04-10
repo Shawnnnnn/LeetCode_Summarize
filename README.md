@@ -1228,6 +1228,44 @@ public:
 };
 ```
 
+------
+
+最小的k个数
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162627953-23472b5d-981e-4c88-952d-80b723ca74fc.png">
+
+```c++
+class Solution {
+public:
+    vector<int> getLeastNumbers(vector<int>& arr, int k) {
+        vector<int> vec(k, 0);
+        if (k == 0) { // 排除 0 的情况
+            return vec;
+        }
+        
+        // 默认为大顶堆，即less
+        priority_queue<int> Q;
+        for (int i = 0; i < k; ++i) {
+            Q.push(arr[i]);
+        }
+        for (int i = k; i < (int)arr.size(); ++i) {
+            // 入过k个数之后，如果还堆顶的数大于要入堆的数，则先把堆顶的数出堆
+            if (Q.top() > arr[i]) {
+                Q.pop();
+                Q.push(arr[i]);
+            }
+        }
+        for (int i = 0; i < k; ++i) {
+            vec[i] = Q.top();
+            Q.pop();
+        }
+        return vec;
+    }
+};
+```
+
+其他的方法还包括快排思想（只排前k个）、计数排序（o(n)）等，见此[链接](https://leetcode-cn.com/problems/zui-xiao-de-kge-shu-lcof/solution/3chong-jie-fa-miao-sha-topkkuai-pai-dui-er-cha-sou/)
+
 ## 二分法
 
 在有序的数组或者链表中，找到某个分界点，可以套用二分法，将时间复杂度降低到O(logN)
@@ -3993,3 +4031,43 @@ public:
 
 ------
 
+编辑距离
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162629824-bd0c5892-ea7b-4d5b-ada7-f833e50c9f49.png">
+
+<img width="825" alt="image" src="https://user-images.githubusercontent.com/28688510/162629887-a21e6d55-935e-44f8-92ee-6c1cb827e60a.png">
+
+<img width="825" alt="image" src="https://user-images.githubusercontent.com/28688510/162629907-c63fc792-4a3c-492b-981f-c928684c745a.png">
+
+
+## 快速排序
+
+![image](https://user-images.githubusercontent.com/28688510/162627116-156db549-c718-483d-86c6-9006f3fbffdc.png)
+
+```c++
+//严蔚敏《数据结构》标准分割函数
+ Paritition1(int A[], int low, int high) {
+   int pivot = A[low];
+   while (low < high) {
+     while (low < high && A[high] >= pivot) {
+       --high;
+     }
+     A[low] = A[high];
+     while (low < high && A[low] <= pivot) {
+       ++low;
+     }
+     A[high] = A[low];
+   }
+   A[low] = pivot;
+   return low;
+ }
+
+ void QuickSort(int A[], int low, int high) //快排母函数
+ {
+   if (low < high) {
+     int pivot = Paritition1(A, low, high);
+     QuickSort(A, low, pivot - 1);
+     QuickSort(A, pivot + 1, high);
+   }
+ }
+```
