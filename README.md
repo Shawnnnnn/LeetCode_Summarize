@@ -3617,7 +3617,7 @@ public:
 
 ------
 
-正则表达式
+正则表达式匹配
 
 <img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162583272-a1b044ff-21a2-4fea-93ac-8796b8703f37.png">
 
@@ -3673,6 +3673,51 @@ public:
 
 ------
 
+通配符匹配
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162607254-4d5a79f9-1509-47d4-8ce0-b2eea04bb1da.png">
+
+这题与上题类似，但考虑的情况没有那么多，?必须匹配一个字符（不能匹配空字符），\*可以匹配任意个字符（包括空字符）：
+* 当遇到?时，直接令dp[i][j] = dp[i-1][j-1]
+* 遇到\*时，可认为其代表空字符，即dp[i][j] = dp[i][j-1]；也可认为其代表任意个字符，这时消除s的最后一个字符，同时保留\*，即dp[i][j] = dp[i-1][j]
+
+```c++
+class Solution {
+public:
+    bool isMatch(string s, string p) {
+        int m = s.size();
+        int n = p.size();
+        vector<vector<int>> dp(m + 1, vector<int>(n + 1));  // 初始化默认均为false
+        dp[0][0] = true;
+
+        // 当p前j个字符均为*时，才能匹配上s0
+        for (int i = 1; i <= n; i++) {
+            if (p[i - 1] == '*') {
+                dp[0][i] = true;
+            }
+            else {
+                break;
+            }
+        }
+
+        // 遍历m和n
+        for (int i = 1; i <= m; i++) {
+            for (int j = 1; j <= n; j++) {
+                if (p[j - 1] == '*') {
+                    dp[i][j] = dp[i][j - 1] | dp[i - 1][j];
+                }
+                else if (s[i - 1] == p[j - 1] || p[j - 1] == '?'){
+                    dp[i][j] = dp[i - 1][j - 1];
+                }
+            }
+        }
+        return dp[m][n];
+    }
+};
+```
+
+------
+
 接雨水
 
 <img src="https://user-images.githubusercontent.com/28688510/155186443-7e951105-7714-4bac-b8b7-1ab266e3f879.png" width="500">
@@ -3708,3 +3753,243 @@ public:
     }
 };
 ```
+
+------
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162608067-da18dd96-2828-46cb-b3a8-a01190d8f6d3.png">
+
+1. 贪心
+这题是典型的贪心算法题，从后往前找能到达指定位置的最远点即可，但这样的时间复杂度是o(n^2)，从前往后则是O(n)，但是需要注意不能只考虑一步，需要考虑两步才能保证贪心找到的点是能达到最远距离的。
+
+![image](https://user-images.githubusercontent.com/28688510/162608167-36d53c47-c52b-4210-9032-aa84c2c85df7.png)
+
+```c++
+class Solution {
+public:
+    int jump(vector<int>& nums) 
+    {
+        int max_far = 0;// 目前能跳到的最远位置
+        int step = 0;   // 跳跃次数
+        int end = 0;    // 上次跳跃可达范围右边界（下次的最右起跳点）
+        for (int i = 0; i < nums.size() - 1; i++)
+        {
+            max_far = std::max(max_far, i + nums[i]);
+            // 到达上次跳跃能到达的右边界了
+            if (i == end)
+            {
+                end = max_far;  // 目前能跳到的最远位置变成了下次起跳位置的有边界
+                step++;         // 进入下一次跳跃
+            }
+        }
+        return step;
+    }
+};
+```
+
+2. dp
+这题同样能用dp去做，设定dp[i]代表移动到位置i，需要的最少步骤数
+可以想到：当前位置i，由上一位置j向右移动最多nums[j]而得到（可能不需要移动nums[j]就到了位置i）
+那么就可以列出状态转移方程：
+dp[i] = min(dp[i], dp[j] + 1)
+
+```c++
+class Solution {
+public:
+    int jump(vector<int>& nums) {
+        // dp代表到达i位置所需的最小跳跃次数
+        vector<int> dp(nums.size(), INT_MAX);
+        dp[0] = 0;
+
+        for (int i = 1; i < nums.size(); i++) {
+            for (int j = 0; j < i; j++) {
+                // 当j + nums[j] >= i说明j可以跳到i，此时更新dp
+                if (j + nums[j] >= i) {
+                    dp[i] = min(dp[j] + 1, dp[i]);
+                }
+            }
+        }
+        return dp[nums.size() - 1];
+    }
+};
+```
+
+此种写法复杂度为O(n^2)
+
+------
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162608720-a2281c8e-c52f-46c6-8c47-b87df1389b7e.png">
+
+1. 贪心
+
+与上题基本类似，维护一个能到达的最远距离，如果大于数组最后一位，则返回true，如果当前遍历位置大于能到达的最远距离，返回false
+
+```c++
+class Solution {
+public:
+    bool canJump(vector<int>& nums) {
+        int max_pos = 0;
+        for (int i = 0; i < nums.size(); i++) {
+            if (i > max_pos) return false;
+            max_pos = max(max_pos, nums[i] + i);
+        }
+        return true;
+    }
+};
+```
+
+2. dp
+
+与上一题类似，复杂度较高，不推荐了
+
+------
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162609924-f02dcb2c-9dc1-4d40-9a39-fa083099bd9c.png">
+
+这题可太经典了，典型的dp题，dp[i][j]表示到达i,j位置可能存在的路径数，因为只能向右向下走，所以dp[i][j] = dp[i-1][j] + dp[i][j-1]
+
+```c++
+class Solution {
+public:
+    int uniquePaths(int m, int n) {
+        vector<vector<int>> dp(m, vector<int>(n));
+
+        // 初始化
+        for (int i = 0; i < m; i++)
+            dp[i][0] = 1;
+        for (int j = 0; j < n; j++)
+            dp[0][j] = 1;
+
+        for (int i = 1; i < m; i++) {
+            for (int j = 1; j < n; j++) {
+                dp[i][j] = dp[i - 1][j] + dp[i][j - 1];
+            }
+        }
+
+        return dp[m - 1][n - 1];
+    }
+};
+```
+
+因为dp[i][j] = dp[i-1][j] + dp[i][j-1]只与左边和上面有关系，因此可以压缩dp至一维
+
+```c++
+class Solution {
+public:
+    int uniquePaths(int m, int n) {
+        // 可以压缩dp[i][j]为dp[i] ，因为dp[i][j]只与dp[i-1][j]和dp[i][j-1]有关
+        // dp[i]可以表示第i列的路径数量
+        // 然后从左往右，从上往下遍历，可以将dp[i][j] = dp[i-1][j]+dp[i][j-1]
+        // 表示为dp[j] = dp[j] + dp[j - 1]，这里的dp[j-1]是新一行的，dp[j]是上一行的
+        vector<int> dp(n+1, 1);
+        for (int i = 2; i <= m; i++) {
+            for (int j = 2; j <= n; j++) {
+                dp[j] = dp[j] + dp[j - 1];
+            }
+        }
+        return dp[n];
+    }
+};
+```
+
+------
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162610059-5403b185-8786-46b2-8069-2cdad383f68c.png">
+
+这题多了个障碍物，在状态转移的时候需要考虑多一点了，dp[i][j]表示到达i,j位置可能存在的路径数，如果i,j处是障碍物，则dp[i][j]=0
+
+```c++
+class Solution {
+public:
+    // 动态规划
+    // dp[i][j]表示到i,j点可能的所有路径数
+    // dp[i][j] = dp[i-1][j] + dp[i][j-1]   dp[i][j]只可能是从左和上来的，因此是两点可能路径之和
+    // 考虑初始条件，第一列只可能是从上来的，因此为1（该点为障碍物是为0）
+    // 同样，第一行只可能是从左来的，因此为1（该点为障碍物是为0）
+    int uniquePathsWithObstacles(vector<vector<int>>& obstacleGrid) {
+        int m = obstacleGrid.size();
+        int n = obstacleGrid[0].size();
+        vector<vector<int>> dp(m, vector<int>(n, 0));
+        for (int i = 0; i < m && obstacleGrid[i][0] == 0; i++) {
+            dp[i][0] = 1;
+        }
+        for (int j = 0; j < n && obstacleGrid[0][j] == 0; j++) {
+            dp[0][j] = 1;
+        }
+
+        for (int i = 1; i < m; i++) {
+            for (int j = 1; j < n; j++) {
+                if (obstacleGrid[i][j] == 0) {
+                    dp[i][j] = dp[i - 1][j] + dp[i][j - 1];
+                }
+            }
+        }
+        return dp[m - 1][n - 1];
+    }
+};
+```
+
+------
+
+最小路径和
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162610506-b68b76b4-4960-46dd-9086-f3cf23a33d54.png">
+
+与上一题类似，需要多考虑的一步是取两条路径中的小的一条作为路径和
+
+```c++
+class Solution {
+public:
+    int minPathSum(vector<vector<int>>& grid) {
+        int m = grid.size();
+        int n = grid[0].size();
+
+        vector<vector<int>> dp (m, vector<int>(n));
+        dp[0][0] = grid[0][0];
+
+        for (int i = 1; i < m; i++) {
+            dp[i][0] = dp[i - 1][0] + grid[i][0];
+        }
+
+        for (int j = 1; j < n; j++) {
+            dp[0][j] = dp[0][j - 1] + grid[0][j];
+        }
+
+        for (int i = 1; i < m; i++) {
+            for (int j = 1; j < n; j++) {
+                dp[i][j] = min(dp[i - 1][j], dp[i][j - 1]) + grid[i][j];
+            }
+        }
+        return dp[m - 1][n - 1];
+    }
+};
+```
+
+------
+
+三角形的最小路径和
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/162610706-702dccb5-9997-4014-b012-3024c723ecc7.png">
+
+这题与上面也是思路一模一样，需要多考虑一个最下面一行的路径只能从左上角而来
+
+```c++
+class Solution {
+public:
+    int minimumTotal(vector<vector<int>>& triangle) {
+        int n = triangle.size();
+        vector<vector<int>> f(n, vector<int>(n));
+        f[0][0] = triangle[0][0];
+        for (int i = 1; i < n; ++i) {
+            f[i][0] = f[i - 1][0] + triangle[i][0];
+            for (int j = 1; j < i; ++j) {
+                f[i][j] = min(f[i - 1][j - 1], f[i - 1][j]) + triangle[i][j];
+            }
+            f[i][i] = f[i - 1][i - 1] + triangle[i][i];
+        }
+        return *min_element(f[n - 1].begin(), f[n - 1].end());
+    }
+};
+```
+
+------
+
