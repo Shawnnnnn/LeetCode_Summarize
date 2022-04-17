@@ -2466,6 +2466,60 @@ public:
 };
 ```
 
+### 广度优先遍历BFS
+
+<img width="524" alt="image" src="https://user-images.githubusercontent.com/28688510/163724198-72942bcc-669b-47d3-a01e-3026531ab9be.png">
+
+输出拓扑排序的方法如[链接](https://leetcode-cn.com/problems/course-schedule-ii/solution/ke-cheng-biao-ii-by-leetcode-solution/)所示，可点击查看原理
+
+```c++
+class Solution {
+public:
+    vector<int> findOrder(int numCourses, vector<vector<int>>& prerequisites) {
+        // 记录边
+        vector<vector<int>> edges(numCourses);
+        // 记录入度
+        vector<int> incount(numCourses);
+
+        // 统计边和入度
+        for (auto& p: prerequisites) {
+            edges[p[1]].push_back(p[0]);
+            incount[p[0]]++;
+        }
+
+        // 广度优先搜索
+        queue<int> q;
+        vector<int> res;
+        int visit = 0;
+        
+        // 入度为0则入队
+        for (int i = 0; i < numCourses; i++) {
+            if (incount[i] == 0) {
+                q.push(i);
+            }
+        }
+
+        // 将栈内的节点出栈，则表明访问过了，visit加一
+        // 出栈的同时要将该节点的有向边的节点入度减一
+        // 最终的结果如果访问的节点数不等于总个数，则表明有环
+        while (!q.empty()) {
+            int cur = q.front();
+            res.push_back(cur);
+            q.pop();
+            visit++;
+
+            for (auto& t: edges[cur]) {
+                incount[t]--;
+                if (incount[t] == 0) {
+                    q.push(t);
+                }
+            }
+        }
+
+        return (visit == numCourses)? res: vector<int>();
+    }
+};
+```
 
 ## KMP
 
