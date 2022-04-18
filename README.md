@@ -2521,6 +2521,70 @@ public:
 };
 ```
 
+------
+
+<img width="524" alt="image" src="https://user-images.githubusercontent.com/28688510/163788124-5b3b21a6-21f5-4e56-88fb-65bdf7989d30.png">
+
+从外围开始广度优先遍历，遍历到的都不可能是被围绕的区域，把这些区域填成另外的A，遍历完后把A还原成O，把O变成X
+
+```c++
+class Solution {
+public:
+    const int dx[4] = {1, -1, 0, 0};
+    const int dy[4] = {0, 0, 1, -1};
+
+    void solve(vector<vector<char>>& board) {
+        int n = board.size();
+        if (n == 0) {
+            return;
+        }
+        int m = board[0].size();
+        queue<pair<int, int>> que;
+        // 矩阵外围四周为O的入队
+        for (int i = 0; i < n; i++) {
+            if (board[i][0] == 'O') {
+                que.emplace(i, 0);
+            }
+            if (board[i][m - 1] == 'O') {
+                que.emplace(i, m - 1);
+            }
+        }
+        for (int i = 1; i < m - 1; i++) {
+            if (board[0][i] == 'O') {
+                que.emplace(0, i);   
+            }
+            if (board[n - 1][i] == 'O') {
+                que.emplace(n - 1, i);
+            }
+        }
+        // 广度优先遍历
+        while (!que.empty()) {
+            int x = que.front().first, y = que.front().second;
+            que.pop();
+            board[x][y] = 'A';
+            for (int i = 0; i < 4; i++) {
+                int mx = x + dx[i], my = y + dy[i];
+                // 超出边界或者不为O则跳过
+                if (mx < 0 || my < 0 || mx >= n || my >= m || board[mx][my] != 'O') {
+                    continue;
+                }
+                que.emplace(mx, my);
+            }
+        }
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (board[i][j] == 'A') {
+                    board[i][j] = 'O';
+                } else if (board[i][j] == 'O') {
+                    board[i][j] = 'X';
+                }
+            }
+        }
+    }
+};
+```
+
+
 ## KMP
 
 <img width="641" alt="image" src="https://user-images.githubusercontent.com/28688510/160673648-495b95e9-1c82-4ca0-82b7-99561238c97f.png">
