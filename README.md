@@ -2642,6 +2642,74 @@ public:
 };
 ```
 
+------
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/164523386-a3d6fdd8-ae3f-437f-879e-a0157e2c9c5c.png">
+
+如果S不包含重复的子字符串，则S本身就是所谓的“重复子字符串”（这里方便自己理解，视为重复一次，不深究= =），str = S+S,说明S是str的重复子字符串，刨去str首尾两个字符之后（相当于分别破坏前一个S头部和后一个S尾部），不能满足str包含S，如果str依旧包含S，说明S是重复子字符串构成的。
+
+这里判断字符串中是否包含子串，可用kmp算法，也可用自带的c++函数
+
+1. 自带函数
+
+```c++
+class Solution {
+public:
+    bool repeatedSubstringPattern(string s) {
+        // find第二个参数表示从第几号索引开始找
+        return (s + s).find(s, 1) != s.size();
+    }
+};
+```
+
+2. kmp
+
+```c++
+class Solution {
+public:
+    int* buildNext(string s) {
+        int n = s.length();
+        int* next = new int[n];
+        int i = 0, j = -1;
+        next[0] = -1;
+
+        while (i < n - 1) {
+            if (j == -1 || s[i] == s[j]) {
+                i++;
+                j++;
+                next[i] = j;
+            }
+            else {
+                j = next[j];
+            }
+        }
+
+        return next;
+    }
+
+    bool repeatedSubstringPattern(string s) {
+        string str = s + s;
+        int n = s.length();
+        int m = n + n - 2;
+        str = str.substr(1, m);
+
+        int* next = buildNext(s);
+
+        int i = 0, j = 0;
+        while (i < m && j < n) {
+            if (j == -1 || str[i] == s[j]) {
+                i++;
+                j++;
+            }
+            else {
+                j = next[j];
+            }
+        }
+        return j == n;
+    }
+};
+```
+
 ## 矩阵相关
 
 <img width="518" alt="image" src="https://user-images.githubusercontent.com/28688510/160884535-d792210d-b94d-40b3-930f-d62236b036ab.png">
@@ -4216,3 +4284,100 @@ public:
    }
  }
 ```
+
+## 并查集
+
+当遇到相关联的东西放到一起的时候，就需要用到并查集。
+
+并查集是用来将相同的元素集合到一起的算法，设置f数组存储各元素的集合头目，实现find寻找头目，isconnected判断两个元素是否在一个集合内，merge合并两个集合。
+
+代码如下：
+
+```c++
+class UnionFind {
+private:
+    vector<int> f;
+    int count;
+public:
+    UnionFind(int count) {
+        this.count = count;
+        f.resize(count);
+        for (int i = 0; i < count; i++) {
+            f[i] = i;
+        }
+    }
+    
+    int find(int p) {
+        assert( p >= 0 && p < count );
+        while( p != f[p] )
+            p = f[p];
+        return p;
+    }
+    
+    bool isconnected(int p, int q) {
+        return find(p) == find(q);        
+    }
+    
+    void merge(int p, int q) {
+        int rootp = find(p);
+        int rootq = find(q);
+        if (rootp == rootq)
+            return;
+        f[rootp] = rootq;
+    }
+}
+```
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/164503497-bd7ea961-16db-403d-a842-748073e6335d.png">
+
+```c++
+class Solution {
+public:
+    vector<int> f;
+
+    int find(int x) {
+        return f[x] == x ? x : f[x] = find(f[x]);
+    }
+
+    bool check(const string &a, const string &b, int len) {
+        int num = 0;
+        for (int i = 0; i < len; i++) {
+            if (a[i] != b[i]) {
+                num++;
+                if (num > 2) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    int numSimilarGroups(vector<string> &strs) {
+        int n = strs.size();
+        int m = strs[0].length();
+        f.resize(n);
+        for (int i = 0; i < n; i++) {
+            f[i] = i;
+        }
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                int fi = find(i), fj = find(j);
+                if (fi == fj) {
+                    continue;
+                }
+                if (check(strs[i], strs[j], m)) {
+                    f[fi] = fj;
+                }
+            }
+        }
+        int ret = 0;
+        for (int i = 0; i < n; i++) {
+            if (f[i] == i) {
+                ret++;
+            }
+        }
+        return ret;
+    }
+};
+```
+
