@@ -2737,6 +2737,169 @@ public:
 };
 ```
 
+------
+
+<img width="518" alt="image" src="https://user-images.githubusercontent.com/28688510/164985780-c7e7223c-f767-4d4a-b845-bf34d1489e62.png">
+
+1. 直接模拟的写法
+
+```c++
+class Solution {
+public:
+    vector<int> spiralOrder(vector<vector<int>>& matrix) {
+        vector<vector<int>> direct = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+
+        int m = matrix.size();
+        int n = matrix[0].size();
+
+        vector<vector<int>> visited(m, vector<int>(n));
+        vector<int> res;
+
+        int x = 0, y = 0, i = 0, count = 1;
+        res.push_back(matrix[x][y]);
+        visited[x][y] = 1;
+
+        while (count < m * n) {
+            int newx = x + direct[i % 4][0];
+            int newy = y + direct[i % 4][1];
+            if (newx >= m || newx < 0 || newy >= n || newy < 0 || visited[newx][newy]) {
+                i++;
+                continue;
+            }
+            else {
+                visited[newx][newy] = 1;
+                res.push_back(matrix[newx][newy]);
+                count++;
+                x = newx;
+                y = newy;
+            }
+        }
+        return res;
+    }
+};
+```
+
+2. 按层模拟的写法
+
+![image](https://user-images.githubusercontent.com/28688510/164986145-1d94893c-abef-44e6-be8c-a492d968e4bc.png)
+
+```c++
+class Solution {
+public:
+    vector<int> spiralOrder(vector<vector<int>>& matrix) {
+        if (matrix.size() == 0 || matrix[0].size() == 0) {
+            return {};
+        }
+
+        int rows = matrix.size(), columns = matrix[0].size();
+        vector<int> order;
+        int left = 0, right = columns - 1, top = 0, bottom = rows - 1;
+        while (left <= right && top <= bottom) {
+            for (int column = left; column <= right; column++) {
+                order.push_back(matrix[top][column]);
+            }
+            for (int row = top + 1; row <= bottom; row++) {
+                order.push_back(matrix[row][right]);
+            }
+            if (left < right && top < bottom) {
+                for (int column = right - 1; column > left; column--) {
+                    order.push_back(matrix[bottom][column]);
+                }
+                for (int row = bottom; row > top; row--) {
+                    order.push_back(matrix[row][left]);
+                }
+            }
+            left++;
+            right--;
+            top++;
+            bottom--;
+        }
+        return order;
+    }
+};
+```
+
+------
+
+<img width="518" alt="image" src="https://user-images.githubusercontent.com/28688510/164986464-2ffb162e-7e0b-418d-bb2b-e694d97548ef.png">
+
+与上一题不同的是，这次是生成螺旋矩阵了，做法与上一题基本一致，不多bb
+
+1. 模拟
+
+```c++
+class Solution {
+public:
+    vector<vector<int>> generateMatrix(int n) {
+        vector<vector<int>> direct = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+
+        vector<vector<int>> res(n, vector<int>(n));
+
+        int x = 0, y = 0, i = 0, count = 1;
+        res[x][y] = count;
+        count++;
+
+        while (count <= n * n) {
+            int newx = x + direct[i % 4][0];
+            int newy = y + direct[i % 4][1];
+            if (newx >= n || newx < 0 || newy >= n || newy < 0 || res[newx][newy] != 0) {
+                i++;
+                continue;
+            }
+            else {
+                res[newx][newy] = count;
+                count++;
+                x = newx;
+                y = newy;
+            }
+        }
+        return res;
+    }
+};
+```
+
+2. 按层模拟
+
+```c++
+class Solution {
+public:
+    vector<vector<int>> generateMatrix(int n) {
+        int num = 1;
+        vector<vector<int>> matrix(n, vector<int>(n));
+        int left = 0, right = n - 1, top = 0, bottom = n - 1;
+        while (left <= right && top <= bottom) {
+            for (int column = left; column <= right; column++) {
+                matrix[top][column] = num;
+                num++;
+            }
+            for (int row = top + 1; row <= bottom; row++) {
+                matrix[row][right] = num;
+                num++;
+            }
+            if (left < right && top < bottom) {
+                for (int column = right - 1; column > left; column--) {
+                    matrix[bottom][column] = num;
+                    num++;
+                }
+                for (int row = bottom; row > top; row--) {
+                    matrix[row][left] = num;
+                    num++;
+                }
+            }
+            left++;
+            right--;
+            top++;
+            bottom--;
+        }
+        return matrix;
+    }
+};
+```
+
+------
+
+
+
 ## 括号相关
 
 一般是用来判断括号的合法性或者删除无效的括号，可以用栈来做，也可以直接通过数括号的个数来
