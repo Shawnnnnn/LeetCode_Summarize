@@ -2466,6 +2466,111 @@ public:
 };
 ```
 
+------
+
+从前序与中序遍历序列构造二叉树
+
+<img width="524" alt="image" src="https://user-images.githubusercontent.com/28688510/165049493-85e14fd3-0501-4a04-9300-02a4b7931989.png">
+
+递归地构建左子树和右子树，求出这两个子树在前序和中序中的位置区间
+
+```c++
+class Solution {
+private:
+    unordered_map<int, int> index;
+
+public:
+    TreeNode* myBuildTree(const vector<int>& preorder, const vector<int>& inorder, int preorder_left, int preorder_right, int inorder_left, int inorder_right) {
+        if (preorder_left > preorder_right) {
+            return nullptr;
+        }
+        
+        // 前序遍历中的第一个节点就是根节点
+        int preorder_root = preorder_left;
+        // 在中序遍历中定位根节点
+        int inorder_root = index[preorder[preorder_root]];
+        
+        // 先把根节点建立出来
+        TreeNode* root = new TreeNode(preorder[preorder_root]);
+        // 得到左子树中的节点数目
+        int size_left_subtree = inorder_root - inorder_left;
+        // 递归地构造左子树，并连接到根节点
+        // 先序遍历中「从 左边界+1 开始的 size_left_subtree」个元素就对应了中序遍历中「从 左边界 开始到 根节点定位-1」的元素
+        root->left = myBuildTree(preorder, inorder, preorder_left + 1, preorder_left + size_left_subtree, inorder_left, inorder_root - 1);
+        // 递归地构造右子树，并连接到根节点
+        // 先序遍历中「从 左边界+1+左子树节点数目 开始到 右边界」的元素就对应了中序遍历中「从 根节点定位+1 到 右边界」的元素
+        root->right = myBuildTree(preorder, inorder, preorder_left + size_left_subtree + 1, preorder_right, inorder_root + 1, inorder_right);
+        return root;
+    }
+
+    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+        int n = preorder.size();
+        // 构造哈希映射，帮助我们快速定位根节点
+        for (int i = 0; i < n; ++i) {
+            index[inorder[i]] = i;
+        }
+        return myBuildTree(preorder, inorder, 0, n - 1, 0, n - 1);
+    }
+};
+```
+
+------
+
+从中序与后序序列构造二叉树
+
+<img width="524" alt="image" src="https://user-images.githubusercontent.com/28688510/165054701-212a119d-363c-4fe8-914c-761fd56bf71b.png">
+
+这题跟那上面一样，注意后序序列的区间计算
+
+```c++
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode() : val(0), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+ *     TreeNode(int x, TreeNode *left, TreeNode *right) : val(x), left(left), right(right) {}
+ * };
+ */
+class Solution {
+private:
+    unordered_map<int, int> index;
+
+public:
+    TreeNode* myBuildTree(const vector<int>& inorder, const vector<int>& postorder, int inorder_left, int inorder_right, int postorder_left, int postorder_right) {
+        if (inorder_left > inorder_right) {
+            return nullptr;
+        }
+        
+        // 后序遍历中的最后一个节点就是根节点
+        int postorder_root = postorder_right;
+        // 在中序遍历中定位根节点
+        int inorder_root = index[postorder[postorder_root]];
+        
+        // 先把根节点建立出来
+        TreeNode* root = new TreeNode(postorder[postorder_root]);
+        // 得到右子树中的节点数目
+        int size_right_subtree = inorder_right - inorder_root;
+        // 递归地构造左子树，并连接到根节点
+        root->left = myBuildTree(inorder, postorder, inorder_left, inorder_root - 1, postorder_left, postorder_right - size_right_subtree - 1);
+        // 递归地构造右子树，并连接到根节点
+        root->right = myBuildTree(inorder, postorder, inorder_root + 1, inorder_right, postorder_right - size_right_subtree + 1, postorder_right - 1);
+        return root;
+    }
+
+    TreeNode* buildTree(vector<int>& inorder, vector<int>& postorder) {
+        int n = inorder.size();
+        // 构造哈希映射，帮助我们快速定位根节点
+        for (int i = 0; i < n; ++i) {
+            index[inorder[i]] = i;
+        }
+        return myBuildTree(inorder, postorder, 0, n - 1, 0, n - 1);
+    }
+};
+```
+
 ### 广度优先遍历BFS
 
 <img width="524" alt="image" src="https://user-images.githubusercontent.com/28688510/163724198-72942bcc-669b-47d3-a01e-3026531ab9be.png">
