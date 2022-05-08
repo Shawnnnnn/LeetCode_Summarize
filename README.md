@@ -4649,3 +4649,71 @@ public:
 };
 ```
 
+# 链表
+
+25. K 个一组翻转链表
+
+<img width="525" alt="image" src="https://user-images.githubusercontent.com/28688510/167288338-839fdeb6-dbf5-4110-8d83-164be2ceb08f.png">
+
+这题就是依次倒转各个部分，然后返回倒转后的头尾，并跟原数组的其他部分连接起来。
+
+```c++
+/**
+ * Definition for singly-linked list.
+ * struct ListNode {
+ *     int val;
+ *     ListNode *next;
+ *     ListNode(int x) : val(x), next(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    // 翻转子链的函数
+    pair<ListNode*, ListNode*> myReverse(ListNode* head, ListNode* tail) {
+        // 初始化pre为尾部后一个是为了第一次操作时把头变成尾再指向原链表
+        ListNode* pre = tail->next;
+        // now表示当前正执行操作的指针
+        ListNode* now = head;
+        while (pre != tail) {
+            // nex表示now的后一个
+            ListNode* nex = now->next;
+            // 把now指向前一个指针
+            now->next = pre;
+            // 前一个指针变成now
+            pre = now;
+            // now指向下一个指针
+            now = nex;
+        }
+        return {tail, head};
+    }
+
+    ListNode* reverseKGroup(ListNode* head, int k) {
+        ListNode* start = new ListNode(0);
+        start->next = head;
+        ListNode* pre = start;
+        while(head) {
+            ListNode* tail = pre;
+            // tail变到从head开始第K个位置
+            for (int i = 0; i < k; i++) {
+                tail = tail->next;
+                if (!tail) {
+                    return start->next;
+                }
+            }
+            // nex表示尾部后面一个
+            ListNode* nex = tail->next;
+            // 对head到tail之间的子链进行翻转，返回新的头尾指针
+            pair<ListNode*, ListNode*> res = myReverse(head, tail);
+            head = res.first;
+            tail = res.second;
+            // 连接原链表与翻转后的子链
+            pre->next = head;
+            tail->next = nex;
+            // 进行新一轮翻转的pre和head设置
+            pre = tail;
+            head = tail->next;
+        }
+        return start->next;
+    }
+};
+```
