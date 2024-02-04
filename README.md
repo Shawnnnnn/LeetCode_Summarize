@@ -1414,7 +1414,6 @@ public:
             }
             // 栈顶出栈
             auto& top = s.top();
-            std::cout << top->val << std::endl;
             s.pop();
             res.push_back(top->val);
             // 往右遍历，但是循环中还是会从左边进栈到底
@@ -1439,17 +1438,16 @@ public:
         TreeNode* pre = nullptr;
         stack<TreeNode*> stk;
 
-        while (root != nullptr || !stk.empty()) {
+        while (root || !stk.empty()) {
             // 往左孩子走到底
-            while (root != nullptr) {
+            while (root) {
                 stk.emplace(root);
                 root = root->left;
             }
             root = stk.top();
-            stk.pop();
             // 判断最左节点的右孩子是否为空，若为空，则说明需要输出
             // 或者存在右孩子且已经输出完了，输出当前节点
-            if (root->right == nullptr || root->right == pre) {
+            if (!root->right || root->right == pre) {
                 res.emplace_back(root->val);
                 // 记录当前输出的节点
                 pre = root;
@@ -1457,9 +1455,8 @@ public:
                 root = nullptr;
             }
             // 如果当前节点右孩子不为空，且还没有输出右子树部分
-            // 则将当前节点重新进栈，右子树按后序遍历进栈
+            // 否则往右走一次，再通过顶层循环继续往左走到底，按后序遍历进栈
             else {
-                stk.emplace(root);
                 root = root->right;
             }
         }
