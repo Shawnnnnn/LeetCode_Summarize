@@ -1402,16 +1402,23 @@ class Solution {
 public:
     vector<int> inorderTraversal(TreeNode* root) {
         vector<int> res;
-        stack<TreeNode*> stk;
-        while (root != nullptr || !stk.empty()) {
-            while (root != nullptr) {
-                stk.push(root);
+        if (!root) return res;
+
+        stack<TreeNode*> s;
+
+        // 左边进栈到底
+        while(root || !s.empty()) { // !s.empty()保证了在root为空时还能取栈顶节点
+            while(root) {
+                s.push(root);
                 root = root->left;
             }
-            root = stk.top();
-            stk.pop();
-            res.push_back(root->val);
-            root = root->right;
+            // 栈顶出栈
+            auto& top = s.top();
+            std::cout << top->val << std::endl;
+            s.pop();
+            res.push_back(top->val);
+            // 往右遍历，但是循环中还是会从左边进栈到底
+            root = top->right;
         }
         return res;
     }
